@@ -555,34 +555,6 @@ textarea { min-height: 62px; resize: none; }
 
 
 
-/* Strong invoice form bottom safe-area fix */
-#invoiceForm.page {
-  height: calc(100% - 72px) !important;
-  overflow-y: scroll !important;
-  overflow-x: hidden !important;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: 360px !important;
-}
-
-#invoiceForm::after {
-  content: "";
-  display: block;
-  height: 260px;
-}
-
-#invoiceForm .primary {
-  display: block;
-  margin-bottom: 220px !important;
-  min-height: 58px;
-}
-
-/* Make sure hidden bottom nav/fab never cover form screens */
-#invoiceForm ~ .bottom-nav,
-#invoiceForm ~ .fab {
-  pointer-events: none;
-}
-
-/* Mobile extra room */
 @media (max-width: 520px) {
   #invoiceForm.page {
     padding-bottom: 420px !important;
@@ -594,6 +566,61 @@ textarea { min-height: 62px; resize: none; }
 
   #invoiceForm .primary {
     margin-bottom: 260px !important;
+  }
+}
+
+
+
+/* Clean form scroll fix for Washing / Ship Work */
+#invoiceForm.page {
+  height: calc(100% - 72px) !important;
+  overflow-y: scroll !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 260px !important;
+}
+
+#invoiceForm.page.active {
+  display: block;
+}
+
+#invoiceForm .primary {
+  min-height: 58px;
+  margin-bottom: 180px !important;
+}
+
+#invoiceForm::-webkit-scrollbar {
+  width: 8px;
+}
+
+#invoiceForm::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.25);
+  border-radius: 999px;
+}
+
+#invoiceForm::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Keep other pages normal */
+#customers.page,
+#jobType.page,
+#created.page,
+#allInvoices.page {
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 180px !important;
+}
+
+@media (max-width: 520px) {
+  #invoiceForm.page {
+    height: calc(100vh - 72px) !important;
+    overflow-y: scroll !important;
+    padding-bottom: 320px !important;
+  }
+
+  #invoiceForm .primary {
+    margin-bottom: 240px !important;
   }
 }
 

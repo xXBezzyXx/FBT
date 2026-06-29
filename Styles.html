@@ -68,19 +68,16 @@ body {
 
 .page {
   display: none;
-  padding: 18px 22px 40px;
+  padding: 18px 22px 24px;
   height: calc(100% - 72px);
   overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: 180px;
+  padding-bottom: 110px;
 }
 
 .page.active { display: block; }
 
 #dashboard.page {
   overflow-y: hidden;
-  padding-bottom: 110px;
 }
 
 .summary-card {
@@ -531,75 +528,28 @@ textarea { min-height: 62px; resize: none; }
 }
 
 
-/* Form scroll fix */
-#invoiceForm {
-  overflow-y: auto !important;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: 220px !important;
-}
-
-#invoiceForm .wide:last-child {
-  margin-bottom: 140px;
-}
-
-/* Customer and job pages also need room on small phones */
-#customers,
-#jobType,
-#created,
-#allInvoices {
-  overflow-y: auto !important;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: 180px !important;
-}
-
-
-
-@media (max-width: 520px) {
-  #invoiceForm.page {
-    padding-bottom: 420px !important;
-  }
-
-  #invoiceForm::after {
-    height: 300px;
-  }
-
-  #invoiceForm .primary {
-    margin-bottom: 260px !important;
-  }
-}
-
-
-
-/* Clean form scroll fix for Washing / Ship Work */
+/* HARD FIX: Washing / Ship Work invoice form must scroll */
 #invoiceForm.page {
-  height: calc(100% - 72px) !important;
-  overflow-y: scroll !important;
+  position: absolute !important;
+  top: 72px !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow-y: auto !important;
   overflow-x: hidden !important;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: 260px !important;
+  -webkit-overflow-scrolling: touch !important;
+  padding: 18px 22px 260px !important;
 }
 
 #invoiceForm.page.active {
-  display: block;
+  display: block !important;
 }
 
 #invoiceForm .primary {
-  min-height: 58px;
+  min-height: 58px !important;
   margin-bottom: 180px !important;
-}
-
-#invoiceForm::-webkit-scrollbar {
-  width: 8px;
-}
-
-#invoiceForm::-webkit-scrollbar-thumb {
-  background: rgba(0,0,0,0.25);
-  border-radius: 999px;
-}
-
-#invoiceForm::-webkit-scrollbar-track {
-  background: transparent;
 }
 
 /* Keep other pages normal */
@@ -608,14 +558,22 @@ textarea { min-height: 62px; resize: none; }
 #created.page,
 #allInvoices.page {
   overflow-y: auto !important;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: 180px !important;
+  -webkit-overflow-scrolling: touch !important;
+  padding-bottom: 160px !important;
 }
 
+/* Dashboard should still only scroll recent invoice cards */
+#dashboard.page {
+  overflow-y: hidden !important;
+}
+
+/* Mobile form scroll */
 @media (max-width: 520px) {
   #invoiceForm.page {
-    height: calc(100vh - 72px) !important;
-    overflow-y: scroll !important;
+    top: 72px !important;
+    bottom: 0 !important;
+    height: auto !important;
+    overflow-y: auto !important;
     padding-bottom: 320px !important;
   }
 

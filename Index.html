@@ -2,290 +2,43 @@
 <html>
 <head>
   <base target="_top">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <?!= include('Styles'); ?>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Invoice Maker</title>
+  <style>
+    :root{--blue:#064ce8;--deep:#030067;--pink:#d90068;--bg:#f7f8fb;--text:#111827;--muted:#6b7280;--card:#fff;--line:#e5e7eb;--green:#9cf3b7;--shadow:0 10px 25px rgba(0,0,0,.08)}
+    *{box-sizing:border-box} body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+    .phone{max-width:430px;margin:0 auto;min-height:100vh;background:linear-gradient(180deg,#fff 0%,#f8f9fc 100%);position:relative;padding:18px 20px 100px;overflow:hidden}.topbar{height:52px;display:flex;align-items:center;justify-content:center;position:relative}.title{font-weight:800;font-size:18px}.icon-btn{position:absolute;left:0;top:11px;border:0;background:transparent;font-size:28px;padding:6px 8px;color:#111}.right-icon{left:auto;right:0;font-size:23px}.gradient-card{background:linear-gradient(135deg,#d80067 0%,#050061 53%,#064cff 100%);color:#fff;border-radius:18px;padding:22px 18px;box-shadow:var(--shadow);display:grid;grid-template-columns:1fr 1px 1fr;gap:18px;margin:8px 0 24px}.divider{background:rgba(255,255,255,.65);width:1px}.metric{min-height:72px}.metric .small{font-size:15px;opacity:.95}.metric .money{font-size:23px;font-weight:800;margin-top:2px}.metric .emoji{font-size:20px;margin-bottom:6px;display:block}.section-title{font-size:18px;font-weight:800;margin:10px 2px 14px}.invoice-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.invoice-card{background:var(--card);border-radius:14px;padding:17px 14px;box-shadow:var(--shadow);min-height:166px}.invoice-no{color:#6b7280;font-size:13px;margin-bottom:18px}.label{font-size:14px;color:#374151}.amount{font-size:21px;font-weight:900;margin-bottom:18px}.customer{color:#4b5563;font-size:16px;margin-bottom:14px}.pill{width:100%;border:0;border-radius:8px;padding:11px 8px;font-size:15px;background:#edeff3;color:#1f2937}.paid{background:var(--green);color:#066326}.bottom-nav{position:fixed;left:50%;bottom:0;transform:translateX(-50%);max-width:430px;width:100%;height:84px;background:rgba(255,255,255,.96);box-shadow:0 -8px 25px rgba(0,0,0,.08);border-radius:26px 26px 0 0;display:flex;align-items:center;justify-content:space-around;z-index:10}.nav-item{text-align:center;color:#6b7280;font-size:12px}.nav-item.active{color:var(--blue);font-weight:800}.nav-ico{font-size:25px;display:block}.fab{position:fixed;left:50%;bottom:54px;transform:translateX(-50%);width:62px;height:62px;border-radius:50%;border:0;background:linear-gradient(135deg,#d80067,#064cff);color:white;font-size:42px;line-height:0;box-shadow:0 8px 20px rgba(0,0,0,.25);z-index:20}.list{display:flex;flex-direction:column;gap:12px;margin-top:28px}.row-card{background:white;border-radius:11px;padding:18px 16px;box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:center;font-size:16px}.custom-row{color:var(--blue);font-weight:700;background:#eef4ff}.chev{font-size:30px;color:#111}.job-wrap{padding-top:34px}.question{text-align:center;font-size:16px;font-weight:750;margin:18px 0 42px}.job-card{background:white;border-radius:16px;padding:28px 18px;box-shadow:var(--shadow);display:flex;align-items:center;gap:20px;margin-bottom:16px}.job-icon{font-size:46px;color:var(--blue);width:54px;text-align:center}.job-card h3{margin:0 0 7px;font-size:20px}.job-card p{margin:0;color:#555;line-height:1.35}.cancel{margin-top:44px;width:100%;border:0;border-radius:9px;background:#e2e4ea;color:#222;font-size:16px;padding:16px}.form-title{font-size:16px;font-weight:800;margin:22px 0 14px}.field{background:white;border:1px solid #e3e6ec;border-radius:8px;margin-bottom:10px;padding:7px 12px;box-shadow:0 3px 10px rgba(0,0,0,.03)}.field label{display:block;font-size:11px;color:#6b7280;margin-bottom:2px}.field input,.field textarea{width:100%;border:0;outline:0;font-size:16px;background:transparent;color:#111;font-family:inherit}.field textarea{min-height:78px;resize:vertical}.primary{width:100%;border:0;border-radius:8px;background:var(--blue);color:white;font-weight:800;font-size:16px;padding:17px;margin-top:18px}.outline{width:100%;border:1px solid #aeb4bf;border-radius:8px;background:white;color:#00a13a;font-weight:800;font-size:16px;padding:16px;margin-top:12px}.success{text-align:center;padding-top:36px}.check{width:94px;height:94px;border-radius:50%;background:linear-gradient(135deg,#10a34a,#38d96f);display:flex;align-items:center;justify-content:center;color:white;font-size:58px;margin:0 auto 20px}.summary-card{background:white;border-radius:11px;box-shadow:var(--shadow);padding:20px;margin:25px 0}.summary-row{display:flex;justify-content:space-between;padding:14px 0;color:#6b7280}.summary-row b{color:#111}.hide{display:none}.settings-box{background:white;border-radius:15px;box-shadow:var(--shadow);padding:20px;margin-top:20px}.muted{color:#6b7280}.back{font-size:32px}.login-card{margin-top:85px;background:white;border-radius:18px;padding:24px;box-shadow:var(--shadow)}.login-card input{width:100%;border:1px solid var(--line);border-radius:10px;padding:15px;font-size:16px;margin:12px 0}.login-card h1{margin:0 0 8px;text-align:center}
+  </style>
 </head>
 <body>
-  <div id="app"></div>
-
-  <script>
-    let appData = { customers: [], company: {} };
-    let selectedCustomer = null;
-    let selectedJobType = null;
-
-    const app = document.getElementById('app');
-
-    function showLogin() {
-      app.innerHTML = `
-        <div class="screen center-screen">
-          <div class="card login-card">
-            <div class="logo">Invoice</div>
-            <h1>Field Invoice</h1>
-            <p class="muted">Enter password to continue</p>
-            <input id="password" type="password" placeholder="Password" onkeydown="if(event.key==='Enter') handleLogin()">
-            <button onclick="handleLogin()">Login</button>
-            <div id="loginError" class="error"></div>
-          </div>
-        </div>
-      `;
-    }
-
-    function handleLogin() {
-      const password = document.getElementById('password').value;
-      setLoading(true);
-      google.script.run
-        .withSuccessHandler(ok => {
-          if (!ok) {
-            setLoading(false);
-            document.getElementById('loginError').textContent = 'Wrong password.';
-            return;
-          }
-          loadInitialData();
-        })
-        .withFailureHandler(showError)
-        .login(password);
-    }
-
-    function loadInitialData() {
-      google.script.run
-        .withSuccessHandler(data => {
-          appData = data;
-          setLoading(false);
-          showCustomers();
-        })
-        .withFailureHandler(showError)
-        .getInitialData();
-    }
-
-    function showCustomers() {
-      const customerButtons = appData.customers.map((c, index) => `
-        <button class="list-btn" onclick="selectCustomer(${index})">
-          <span>${escapeHtml(c.name)}</span>
-          <small>${escapeHtml(c.address || c.phone || '')}</small>
-        </button>
-      `).join('');
-
-      app.innerHTML = `
-        <div class="screen">
-          <div class="header">
-            <h1>Customers</h1>
-            <p>Select a customer or use custom for a one-off job.</p>
-          </div>
-          <div class="list">
-            ${customerButtons || '<p class="muted">No customers yet. Add them in the Customers sheet.</p>'}
-          </div>
-          <div class="bottom-bar">
-            <button class="secondary" onclick="showCustomCustomer()">Custom / One-Off Job</button>
-          </div>
-        </div>
-      `;
-    }
-
-    function selectCustomer(index) {
-      selectedCustomer = appData.customers[index];
-      showJobType();
-    }
-
-    function showCustomCustomer() {
-      selectedCustomer = { name: '', email: '', address: '', phone: '', custom: true };
-      app.innerHTML = `
-        <div class="screen">
-          <button class="back" onclick="showCustomers()">← Back</button>
-          <div class="header"><h1>Custom Customer</h1></div>
-          <div class="card">
-            <label>Customer Name</label>
-            <input id="customName" placeholder="Customer name">
-            <label>Email</label>
-            <input id="customEmail" placeholder="Customer email">
-            <label>Address</label>
-            <textarea id="customAddress" placeholder="Customer address"></textarea>
-            <label>Phone</label>
-            <input id="customPhone" placeholder="Customer phone">
-            <button onclick="saveCustomCustomer()">Continue</button>
-          </div>
-        </div>
-      `;
-    }
-
-    function saveCustomCustomer() {
-      selectedCustomer = {
-        name: val('customName'),
-        email: val('customEmail'),
-        address: val('customAddress'),
-        phone: val('customPhone'),
-        custom: true
-      };
-      if (!selectedCustomer.name) return alert('Customer name is required.');
-      showJobType();
-    }
-
-    function showJobType() {
-      app.innerHTML = `
-        <div class="screen center-screen">
-          <button class="back top-left" onclick="showCustomers()">← Back</button>
-          <div class="card">
-            <h1>${escapeHtml(selectedCustomer.name)}</h1>
-            <p class="muted">What kind of job are you doing?</p>
-            <button onclick="selectJobType('Washing')">Washing</button>
-            <button onclick="selectJobType('Ship Work')" class="secondary">Ship Work</button>
-          </div>
-        </div>
-      `;
-    }
-
-    function selectJobType(type) {
-      selectedJobType = type;
-      showInvoiceForm();
-    }
-
-    function showInvoiceForm() {
-      const isShip = selectedJobType === 'Ship Work';
-      app.innerHTML = `
-        <div class="screen">
-          <button class="back" onclick="showJobType()">← Back</button>
-          <div class="header">
-            <h1>${escapeHtml(selectedJobType)}</h1>
-            <p>${escapeHtml(selectedCustomer.name)}</p>
-          </div>
-
-          <div class="card">
-            <label>Job Date</label>
-            <input id="jobDate" type="date" value="${new Date().toISOString().slice(0,10)}">
-
-            <label>Job Location</label>
-            <input id="location" placeholder="Location">
-
-            ${isShip ? `
-              <label>Vessel / Ship Name</label>
-              <input id="vesselName" placeholder="Vessel / ship name">
-            ` : `<input id="vesselName" type="hidden" value="">`}
-
-            <label>Work Performed</label>
-            <textarea id="description" placeholder="Describe the work completed"></textarea>
-
-            <div class="split-title">Price Option</div>
-            <p class="muted small">Use flat price OR labor/materials. If flat price is filled in, it will use that.</p>
-
-            <label>Flat Price</label>
-            <input id="flatPrice" type="number" step="0.01" placeholder="0.00">
-
-            <label>Labor Hours</label>
-            <input id="laborHours" type="number" step="0.25" placeholder="0">
-
-            <label>Labor Rate</label>
-            <input id="laborRate" type="number" step="0.01" placeholder="0.00">
-
-            <label>Materials</label>
-            <input id="materials" type="number" step="0.01" placeholder="0.00">
-
-            <label>Notes</label>
-            <textarea id="notes" placeholder="Notes for invoice or office"></textarea>
-
-            <button onclick="submitInvoice()">Create & Email Invoice</button>
-          </div>
-        </div>
-      `;
-    }
-
-    function submitInvoice() {
-      const payload = {
-        customerName: selectedCustomer.name,
-        customerEmail: selectedCustomer.email,
-        customerAddress: selectedCustomer.address,
-        customerPhone: selectedCustomer.phone,
-        jobType: selectedJobType,
-        jobDate: val('jobDate'),
-        location: val('location'),
-        vesselName: val('vesselName'),
-        description: val('description'),
-        flatPrice: val('flatPrice'),
-        laborHours: val('laborHours'),
-        laborRate: val('laborRate'),
-        materials: val('materials'),
-        notes: val('notes')
-      };
-
-      if (!payload.description) return alert('Work performed is required.');
-      if (!payload.flatPrice && (!payload.laborHours || !payload.laborRate)) {
-        return alert('Enter a flat price or labor hours and labor rate.');
-      }
-
-      app.innerHTML = `
-        <div class="screen center-screen">
-          <div class="card center">
-            <div class="spinner"></div>
-            <h1>Creating Invoice...</h1>
-            <p class="muted">Please do not close this screen.</p>
-          </div>
-        </div>
-      `;
-
-      google.script.run
-        .withSuccessHandler(result => showSuccess(result))
-        .withFailureHandler(showError)
-        .submitInvoice(payload);
-    }
-
-    function showSuccess(result) {
-      app.innerHTML = `
-        <div class="screen center-screen">
-          <div class="card center">
-            <div class="success-check">✓</div>
-            <h1>Invoice Sent</h1>
-            <p><strong>${escapeHtml(result.invoiceNo)}</strong></p>
-            <p class="muted">Total: $${Number(result.total).toFixed(2)}</p>
-            <a class="button-link" href="${result.pdfUrl}" target="_blank">Open PDF</a>
-            <button class="secondary" onclick="resetApp()">Create Another Invoice</button>
-          </div>
-        </div>
-      `;
-    }
-
-    function resetApp() {
-      selectedCustomer = null;
-      selectedJobType = null;
-      loadInitialData();
-    }
-
-    function val(id) {
-      const el = document.getElementById(id);
-      return el ? el.value.trim() : '';
-    }
-
-    function setLoading(isLoading) {
-      let existing = document.getElementById('loadingOverlay');
-      if (isLoading && !existing) {
-        const div = document.createElement('div');
-        div.id = 'loadingOverlay';
-        div.innerHTML = '<div class="spinner"></div>';
-        document.body.appendChild(div);
-      }
-      if (!isLoading && existing) existing.remove();
-    }
-
-    function showError(error) {
-      setLoading(false);
-      app.innerHTML = `
-        <div class="screen center-screen">
-          <div class="card center">
-            <h1>Something went wrong</h1>
-            <p class="error">${escapeHtml(error.message || error)}</p>
-            <button onclick="showLogin()">Start Over</button>
-          </div>
-        </div>
-      `;
-    }
-
-    function escapeHtml(text) {
-      return String(text || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
-
-    showLogin();
-  </script>
+<div class="phone" id="app"></div>
+<script>
+const PASSWORD='1234';
+let selectedCustomer='';
+let invoices=[
+ {no:'INV-1004',customer:'Emy Watson',total:1332,paid:false,date:'06/02/22'},
+ {no:'INV-1003',customer:"Nate O’Brien",total:844,paid:true,date:'06/02/22'},
+ {no:'INV-1002',customer:'Jane Cook',total:1161,paid:true,date:'06/02/22'},
+ {no:'INV-1001',customer:'John Doe',total:1589,paid:false,date:'06/02/22'}
+];
+const customers=['Emy Watson',"Nate O’Brien",'Jane Cook','John Doe','ABC Marine'];
+function money(n){return '$'+Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
+function set(html){document.getElementById('app').innerHTML=html;}
+function top(title,back=false,right=''){return `<div class="topbar">${back?`<button class="icon-btn back" onclick="${back}">‹</button>`:'<button class="icon-btn">≡</button>'}<div class="title">${title}</div>${right?`<button class="icon-btn right-icon">${right}</button>`:''}</div>`}
+function showLogin(){set(`<div class="login-card"><h1>Invoice Maker</h1><p class="muted" style="text-align:center">Enter password to continue</p><input id="pw" type="password" placeholder="Password"><button class="primary" onclick="login()">Login</button></div>`)}
+function login(){ if(document.getElementById('pw').value===PASSWORD){showHome()} else alert('Wrong password. Use 1234 for now.'); }
+function totals(){let unpaid=invoices.filter(x=>!x.paid).reduce((a,b)=>a+b.total,0), paid=invoices.filter(x=>x.paid).reduce((a,b)=>a+b.total,0);return {unpaid,paid};}
+function showHome(){let t=totals();let cards=invoices.map((x,i)=>`<div class="invoice-card"><div class="invoice-no">#${x.no}</div><div class="label">Total:</div><div class="amount">${money(x.total)}</div><div class="customer">${x.customer}</div><button class="pill ${x.paid?'paid':''}" onclick="markPaid(${i})">${x.paid?'Paid':'Mark as paid'}</button></div>`).join('');set(`${top('Invoice Maker',false,'♧')}<div class="gradient-card"><div><div class="metric"><span class="emoji">⚠</span><div class="small">Total Unpaid</div><div class="money">-${money(t.unpaid)}</div></div><div class="metric"><span class="emoji">▦</span><div class="small">Last 7 Days</div><div class="money">${money(t.paid)}</div></div></div><div class="divider"></div><div><div class="metric"><span class="emoji">◉</span><div class="small">Total Paid</div><div class="money">${money(t.paid)}</div></div><div class="metric"><span class="emoji">▦</span><div class="small">Last Month</div><div class="money">$0.00</div></div></div></div><div class="section-title">Recent Invoices</div><div class="invoice-grid">${cards}</div><button class="fab" onclick="showCustomers()">+</button><div class="bottom-nav"><div class="nav-item active"><span class="nav-ico">⌂</span>Home</div><div class="nav-item" onclick="showSettings()"><span class="nav-ico">⚙</span>Settings</div></div>`)}
+function markPaid(i){invoices[i].paid=true;showHome();}
+function showCustomers(){set(`${top('Select Customer','showHome()')}<div class="list">${customers.map(c=>`<div class="row-card" onclick="selectedCustomer='${c.replace(/'/g,"\\'")}';showJobType();"><span>${c}</span><span class="chev">›</span></div>`).join('')}<div class="row-card custom-row" onclick="customCustomer()"><span>＋ Custom / One-Off Job</span></div></div>`)}
+function customCustomer(){set(`${top('Custom Customer','showCustomers()')}<div class="form-title">Customer Information</div><div class="field"><label>Customer Name</label><input id="customName" placeholder="Enter customer name"></div><button class="primary" onclick="selectedCustomer=document.getElementById('customName').value||'Custom Customer';showJobType();">Continue</button>`)}
+function showJobType(){set(`${top('Select Job Type','showCustomers()')}<div class="job-wrap"><div class="question">What kind of job are you doing?</div><div class="job-card" onclick="showForm('Ship Work')"><div class="job-icon">🚢</div><div><h3>Ship Work</h3><p>Work performed on vessels, equipment, or at the dock.</p></div><div class="chev">›</div></div><div class="job-card" onclick="showForm('Washing')"><div class="job-icon">💧</div><div><h3>Washing</h3><p>Pressure washing, cleaning, and related services.</p></div><div class="chev">›</div></div><button class="cancel" onclick="showCustomers()">Cancel</button></div>`)}
+function showForm(type){let ship=type==='Ship Work';set(`${top(type,'showJobType()')}<div class="form-title">Invoice Details</div><div class="field"><label>Job Date</label><input id="date" type="date"></div>${ship?'<div class="field"><label>Vessel / Ship Name</label><input id="vessel" placeholder="Sea Explorer"></div>':''}<div class="field"><label>Job Location</label><input id="loc" placeholder="Job location"></div><div class="field"><label>${ship?'Work Performed':'Description of Work'}</label><textarea id="desc" placeholder="Describe the work"></textarea></div><div class="field"><label>${ship?'Labor Hours':'Hours / Quantity'}</label><input id="hours" type="number" oninput="calcTotal()"></div><div class="field"><label>Rate ($)</label><input id="rate" type="number" oninput="calcTotal()"></div>${ship?'<div class="field"><label>Materials ($)</label><input id="materials" type="number" oninput="calcTotal()"></div>':''}<div class="field"><label>Total ($)</label><input id="total" type="number"></div><div class="field"><label>Notes (Optional)</label><textarea id="notes"></textarea></div><button class="primary" onclick="createInvoice('${type}')">Create Invoice</button>`)}
+function calcTotal(){let h=+((document.getElementById('hours')||{}).value||0),r=+((document.getElementById('rate')||{}).value||0),m=+((document.getElementById('materials')||{}).value||0);let total=document.getElementById('total'); if(total) total.value=(h*r+m).toFixed(2);}
+function createInvoice(type){let total=+document.getElementById('total').value||0;let no='INV-'+(1000+invoices.length+1);let inv={no,customer:selectedCustomer,total,paid:false,date:new Date().toLocaleDateString()};invoices.unshift(inv);showCreated(inv);}
+function showCreated(inv){set(`${top('Invoice Created','showHome()')}<div class="success"><div class="check">✓</div><h1>Invoice Created!</h1><p class="muted">Your invoice has been created successfully.</p></div><div class="summary-card"><div class="summary-row"><span>Invoice #</span><b>${inv.no}</b></div><div class="summary-row"><span>Customer</span><b>${inv.customer}</b></div><div class="summary-row"><span>Total</span><b>${money(inv.total)}</b></div><div class="summary-row"><span>Date</span><b>${inv.date}</b></div></div><button class="primary" onclick="alert('PDF will be connected next.')">View Invoice (PDF)</button><button class="outline" onclick="inv.paid=true;invoices[0].paid=true;showHome();">Mark as Paid</button><button class="outline" onclick="alert('Email will be connected next.')">Send Invoice</button><button class="cancel" onclick="showHome()">Back to Home</button>`)}
+function showSettings(){set(`${top('Settings','showHome()')}<div class="settings-box"><h2>Settings</h2><p class="muted">This screen will hold password, email, invoice number, and customer list later.</p><button class="primary" onclick="showHome()">Back to Home</button></div><div class="bottom-nav"><div class="nav-item" onclick="showHome()"><span class="nav-ico">⌂</span>Home</div><div class="nav-item active"><span class="nav-ico">⚙</span>Settings</div></div>`)}
+showLogin();
+</script>
 </body>
 </html>

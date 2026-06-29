@@ -53,6 +53,8 @@ async function loadAppData() {
     customers = data.customers || [];
     invoices = data.invoices || [];
     invoiceCounter = data.nextInvoiceNumber || invoiceCounter;
+    appSettings = data.settings || { invoiceEmail: '' };
+    fillSettingsForm();
 
     renderInvoices();
     renderAllInvoices();
@@ -70,6 +72,7 @@ let selectedCustomer = '';
 let currentJobType = '';
 let invoiceCounter = 1013;
 let currentCreatedInvoiceNumber = '';
+let appSettings = { invoiceEmail: '' };
 
 let customers = [];
 
@@ -417,6 +420,7 @@ function showPage(pageId) {
   else navItems[0].classList.add('active');
 
   if (pageId === 'allInvoices') renderAllInvoices();
+  if (pageId === 'settings') fillSettingsForm();
 }
 
 function goBack() {
@@ -429,6 +433,64 @@ function goBack() {
   else showPage('dashboard');
 }
 
+
+
+function fillSettingsForm() {
+  const emailInput = document.getElementById('settingInvoiceEmail');
+  if (emailInput) {
+    emailInput.value = appSettings.invoiceEmail || '';
+  }
+}
+
+async function loadSettings() {
+  try {
+    showLoading('Loading settings...');
+    const data = await apiRequest('getSettings');
+    appSettings = data || { invoiceEmail: '' };
+    fillSettingsForm();
+  } catch (err) {
+    alert('Could not load settings: ' + err.message);
+  } finally {
+    hideLoading();
+  }
+}
+
+async function saveSettings() {
+  const emailInput = document.getElementById('settingInvoiceEmail');
+  const invoiceEmail = emailInput ? emailInput.value.trim() : '';
+
+  try {
+    showLoading('Saving settings...');
+    appSettings = await apiRequest('saveSettings', { invoiceEmail });
+    fillSettingsForm();
+    alert('Settings saved.');
+  } catch (err) {
+    alert('Could not save settings: ' + err.message);
+  } finally {
+    hideLoading();
+  }
+}
+
+async function sendCreatedInvoiceEmail() {
+  const invoiceNumber =
+    currentCreatedInvoiceNumber ||
+    (document.getElementById('createdNumber') ? document.getElementById('createdNumber').innerText : '');
+
+  if (!invoiceNumber) {
+    alert('No invoice selected.');
+    return;
+  }
+
+  try {
+    showLoading('Sending invoice...');
+    const result = await apiRequest('sendInvoiceEmail', { invoiceNumber });
+    alert('Invoice emailed to: ' + result.sentTo);
+  } catch (err) {
+    alert('Could not send invoice email: ' + err.message);
+  } finally {
+    hideLoading();
+  }
+}
 
 async function viewCreatedInvoicePdf() {
   const invoiceNumber =

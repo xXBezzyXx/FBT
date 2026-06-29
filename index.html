@@ -196,14 +196,22 @@
 
       <button class="wide primary" onclick="viewCreatedInvoicePdf()">View Invoice PDF</button>
       <button class="wide outline-green" onclick="markLastPaid()">Mark as Paid</button>
-      <button class="wide outline" onclick="alert('Email will be added later.')">Send Invoice</button>
+      <button class="wide outline" onclick="sendCreatedInvoiceEmail()">Send Invoice Email</button>
       <button class="wide gray" onclick="showPage('dashboard')">Back to Home</button>
     </main>
 
     <main id="settings" class="page">
       <section class="settings-card">
         <h2>Settings</h2>
-        <p>This is where company name, email, logo, password, and customers will go later.</p>
+        <p>Set the email address where invoices should be sent.</p>
+
+        <div class="field">
+          <label>Invoice Email</label>
+          <input id="settingInvoiceEmail" type="email" placeholder="example@email.com" />
+        </div>
+
+        <button class="wide primary" onclick="saveSettings()">Save Settings</button>
+        <button class="wide gray" onclick="loadSettings()">Reload Settings</button>
       </section>
     </main>
 

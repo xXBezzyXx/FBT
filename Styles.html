@@ -61,17 +61,24 @@ body {
 
 .back-btn { left: 18px; }
 .top-icon { right: 22px; font-size: 24px; bottom: 15px; }
-.hidden { display: none !important; }
+
+.hidden {
+  display: none !important;
+}
 
 .page {
   display: none;
   padding: 18px 22px 24px;
   height: calc(100% - 72px);
-  overflow-y: hidden;
+  overflow-y: auto;
   padding-bottom: 110px;
 }
 
 .page.active { display: block; }
+
+#dashboard.page {
+  overflow-y: hidden;
+}
 
 .summary-card {
   border-radius: 18px;
@@ -224,7 +231,7 @@ body {
   border: 0;
   background: transparent;
   text-align: center;
-  font-size: 11px;
+  font-size: 12px;
   color: #60636b;
   width: 95px;
   cursor: pointer;
@@ -241,10 +248,13 @@ body {
   font-weight: 800;
 }
 
-.filter-card {
+.filter-card,
+.detail-card,
+.settings-card,
+.empty-state {
   background: white;
   border-radius: 18px;
-  padding: 16px;
+  padding: 18px;
   box-shadow: var(--shadow);
   margin-bottom: 16px;
 }
@@ -259,15 +269,6 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
-}
-
-.filter-field {
-  margin-bottom: 10px !important;
-}
-
-.clear-filter {
-  padding: 12px !important;
-  margin-top: 0 !important;
 }
 
 .all-list {
@@ -322,15 +323,8 @@ body {
   font-weight: 900;
 }
 
-.status-paid {
-  background: #d9fbe2;
-  color: #0a7f32;
-}
-
-.status-unpaid {
-  background: #fff0f3;
-  color: #c6003a;
-}
+.status-paid { background: #d9fbe2; color: #0a7f32; }
+.status-unpaid { background: #fff0f3; color: #c6003a; }
 
 .list {
   display: flex;
@@ -433,7 +427,6 @@ textarea { min-height: 62px; resize: none; }
 
 .primary { background: #064be0; color: #fff; }
 .gray { background: #e5e7ed; color: #222; }
-.outline { background: #fff; border: 1px solid #adb3c0; color: #333; }
 .outline-green { background: #fff; border: 1px solid #57bd75; color: #0ba33c; }
 
 .success-wrap { text-align: center; padding-top: 42px; }
@@ -455,15 +448,6 @@ textarea { min-height: 62px; resize: none; }
 .success-wrap h1 { font-size: 26px; margin: 0 0 8px; }
 .success-wrap p { color: #656973; margin: 0 0 28px; }
 
-.detail-card,
-.settings-card {
-  background: white;
-  border-radius: 14px;
-  padding: 20px;
-  box-shadow: var(--shadow);
-  margin-bottom: 22px;
-}
-
 .detail-row {
   display: flex;
   justify-content: space-between;
@@ -472,6 +456,50 @@ textarea { min-height: 62px; resize: none; }
 }
 
 .detail-row span { color: #6d7280; }
+
+.empty-state {
+  text-align: center;
+  color: #5f6672;
+}
+
+.empty-state h3 {
+  margin: 8px 0 6px;
+  font-size: 18px;
+  color: #222;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.empty-icon {
+  font-size: 34px;
+}
+
+.wide-empty {
+  grid-column: 1 / -1;
+}
+
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255,255,255,0.72);
+  backdrop-filter: blur(8px);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-card {
+  background: white;
+  padding: 18px 24px;
+  border-radius: 18px;
+  box-shadow: 0 18px 50px rgba(0,0,0,.18);
+  font-weight: 900;
+}
 
 @media (max-width: 520px) {
   body { background: #f7f8fb; }
@@ -490,60 +518,12 @@ textarea { min-height: 62px; resize: none; }
   .fab {
     position: fixed;
   }
-}
 
-#allInvoices.page { overflow-y: auto; }
-#dashboard.page { overflow-y: hidden; }
-
-
-
-
-
-.scroll-invoices::-webkit-scrollbar {
-  width: 6px;
-}
-
-.scroll-invoices::-webkit-scrollbar-thumb {
-  background: rgba(0,0,0,0.22);
-  border-radius: 999px;
-}
-
-.scroll-invoices::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-
-@media (max-width: 520px) {
   .scroll-invoices {
     height: calc(100vh - 385px);
     min-height: 345px;
     overflow-y: auto;
     padding-bottom: 180px;
   }
-
-  #dashboard.page {
-    overflow-y: hidden;
-  }
-}
-
-
-.loading-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(255,255,255,0.65);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
-
-.loading-card {
-  background: white;
-  border-radius: 18px;
-  padding: 18px 22px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.18);
-  font-weight: 900;
-  color: #111;
 }
 </style>

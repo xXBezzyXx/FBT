@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Invoice Maker</title>
   <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Invoice Maker</title>
   <?!= include('Styles'); ?>
 </head>
 <body>
@@ -21,7 +21,7 @@
           <div class="summary-item">
             <div class="summary-icon">⚠</div>
             <div class="summary-label">Total Unpaid</div>
-            <div id="totalUnpaid" class="summary-amount">-$0.00</div>
+            <div id="totalUnpaid" class="summary-amount">$0.00</div>
           </div>
           <div class="summary-item">
             <div class="summary-icon">▦</div>
@@ -82,16 +82,13 @@
             <label>Year</label>
             <select id="filterYear" onchange="renderAllInvoices()">
               <option value="">All</option>
-              <option value="2026">2026</option>
-              <option value="2025">2025</option>
-              <option value="2024">2024</option>
             </select>
           </div>
         </div>
 
         <div class="field filter-field">
           <label>Exact Date</label>
-          <input id="filterDate" type="date" onchange="renderAllInvoices()" />
+          <input id="filterDate" type="date" onchange="renderAllInvoices()">
         </div>
 
         <button class="wide gray clear-filter" onclick="clearFilters()">Clear Filters</button>
@@ -133,17 +130,17 @@
 
       <div class="field">
         <label>Customer</label>
-        <input id="formCustomer" type="text" />
+        <input id="formCustomer" type="text">
       </div>
 
       <div id="shipField" class="field hidden">
         <label>Vessel / Ship Name</label>
-        <input id="vesselName" type="text" placeholder="Enter vessel name" />
+        <input id="vesselName" type="text" placeholder="Enter vessel name">
       </div>
 
       <div class="field">
         <label>Job Location</label>
-        <input id="jobLocation" type="text" placeholder="Enter location" />
+        <input id="jobLocation" type="text" placeholder="Enter location">
       </div>
 
       <div class="field">
@@ -154,23 +151,23 @@
       <div class="two-col">
         <div class="field">
           <label>Hours / Qty</label>
-          <input id="hours" type="number" value="1" oninput="calculateTotal()" />
+          <input id="hours" type="number" value="1" oninput="calculateTotal()">
         </div>
 
         <div class="field">
           <label>Rate</label>
-          <input id="rate" type="number" value="100" oninput="calculateTotal()" />
+          <input id="rate" type="number" value="100" oninput="calculateTotal()">
         </div>
       </div>
 
       <div class="field">
         <label>Materials / Extra Charges</label>
-        <input id="materials" type="number" value="0" oninput="calculateTotal()" />
+        <input id="materials" type="number" value="0" oninput="calculateTotal()">
       </div>
 
       <div class="field total-field">
         <label>Total</label>
-        <input id="totalAmount" type="number" value="100" />
+        <input id="totalAmount" type="number" value="100">
       </div>
 
       <div class="field">
@@ -185,26 +182,26 @@
       <section class="success-wrap">
         <div class="success-check">✓</div>
         <h1>Invoice Created!</h1>
-        <p>Your invoice has been created successfully.</p>
+        <p>Your invoice has been saved to the Invoices sheet.</p>
       </section>
 
       <section class="detail-card">
-        <div class="detail-row"><span>Invoice #</span><strong id="createdNumber">INV-1005</strong></div>
+        <div class="detail-row"><span>Invoice #</span><strong id="createdNumber">INV-1001</strong></div>
         <div class="detail-row"><span>Customer</span><strong id="createdCustomer">Customer</strong></div>
         <div class="detail-row"><span>Total</span><strong id="createdTotal">$0.00</strong></div>
         <div class="detail-row"><span>Status</span><strong id="createdStatus">Unpaid</strong></div>
       </section>
 
-      <button class="wide primary" onclick="alert('PDF will be added later.')">View Invoice</button>
       <button class="wide outline-green" onclick="markLastPaid()">Mark as Paid</button>
-      <button class="wide outline" onclick="alert('Email will be added later.')">Send Invoice</button>
       <button class="wide gray" onclick="showPage('dashboard')">Back to Home</button>
     </main>
 
     <main id="settings" class="page">
       <section class="settings-card">
         <h2>Settings</h2>
-        <p>This is where company name, email, logo, password, and customers will go later.</p>
+        <p>Customers and invoices are controlled by the Google Sheet.</p>
+        <p><b>Customers</b> sheet feeds the customer list.</p>
+        <p><b>Invoices</b> sheet feeds the dashboard and All Invoices page.</p>
       </section>
     </main>
 
@@ -220,6 +217,10 @@
         <small>Settings</small>
       </button>
     </nav>
+  </div>
+
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="loading-card" id="loadingText">Loading...</div>
   </div>
 
   <?!= include('JavaScript'); ?>

@@ -528,64 +528,28 @@ textarea { min-height: 62px; resize: none; }
 }
 
 
-/* FORCE FIX: Invoice form opens as its own full-screen scroll panel */
-#invoiceForm.page {
-  position: fixed !important;
-  top: 72px !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  width: 100% !important;
-  max-width: 430px !important;
-  height: calc(100vh - 72px) !important;
-  max-height: calc(100vh - 72px) !important;
-  overflow-y: scroll !important;
+/* Two-step invoice form fix */
+#invoiceForm.page,
+#billingForm.page {
+  overflow-y: auto !important;
   overflow-x: hidden !important;
-  -webkit-overflow-scrolling: touch !important;
-  background: linear-gradient(180deg, #ffffff 0%, #f8f9fc 100%) !important;
-  z-index: 9998 !important;
-  padding: 18px 22px 240px !important;
-  border-radius: 0 0 34px 34px;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 160px !important;
 }
 
-#invoiceForm.page:not(.active) {
-  display: none !important;
+#invoiceForm .wide:last-child,
+#billingForm .wide:last-child {
+  margin-bottom: 80px;
 }
 
-#invoiceForm.page.active {
-  display: block !important;
-}
-
-#invoiceForm .primary {
-  min-height: 60px !important;
-  margin-bottom: 180px !important;
-}
-
-/* While form is open, hide app bottom controls */
-body.invoice-form-open #fab,
-body.invoice-form-open #bottomNav {
-  display: none !important;
-}
-
-/* Make sure the browser itself can scroll if needed */
-body.invoice-form-open,
-html.invoice-form-open {
-  overflow: hidden !important;
+#billingForm .primary {
+  min-height: 58px;
 }
 
 @media (max-width: 520px) {
-  #invoiceForm.page {
-    left: 0 !important;
-    transform: none !important;
-    max-width: none !important;
-    width: 100vw !important;
-    height: calc(100vh - 72px) !important;
-    max-height: calc(100vh - 72px) !important;
-    padding-bottom: 300px !important;
-    border-radius: 0 !important;
-  }
-
-  #invoiceForm .primary {
-    margin-bottom: 240px !important;
+  #invoiceForm.page,
+  #billingForm.page {
+    padding-bottom: 180px !important;
   }
 }
 

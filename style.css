@@ -575,91 +575,56 @@ textarea { min-height: 62px; resize: none; }
 }
 
 
-/* View All invoice PDF click behavior */
-.clickable-invoice {
-  cursor: pointer;
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
-}
-
-.clickable-invoice:active {
-  transform: scale(0.98);
-}
-
-.pdf-btn {
-  width: 100%;
-  border: 0;
-  border-radius: 8px;
-  padding: 10px;
-  font-size: 15px;
-  cursor: pointer;
-  margin-top: 10px;
-  background: #064be0;
-  color: #fff;
-  font-weight: 800;
-}
-
-
-/* Login Page */
-.login-screen {
-  position: fixed;
-  inset: 0;
-  background: linear-gradient(135deg, var(--pink) 0%, var(--deep) 52%, #004cff 100%);
-  z-index: 100000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-}
-
-.login-card {
-  width: 100%;
-  max-width: 390px;
-  background: white;
-  border-radius: 28px;
-  padding: 32px 24px;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.28);
-  text-align: center;
-}
-
-.login-logo {
-  width: 72px;
-  height: 72px;
-  border-radius: 24px;
-  background: linear-gradient(135deg, #d30082, #003ced);
-  color: white;
-  font-size: 38px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 18px;
-  box-shadow: 0 14px 32px rgba(0, 0, 120, 0.25);
-}
-
-.login-card h1 {
-  margin: 0;
-  font-size: 28px;
-  font-weight: 900;
-}
-
-.login-card p {
-  margin: 8px 0 22px;
-  color: #6d7280;
-}
-
-.login-field {
-  text-align: left;
-  margin-bottom: 12px;
-}
-
-.login-error {
-  margin-top: 14px;
-  color: #c6003a;
+/* Added invoice PDF fields */
+.section-mini-title {
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 900;
+  color: #0b55e9;
+  margin: 14px 0 8px;
 }
 
-body.locked .app-shell {
-  filter: blur(2px);
-  pointer-events: none;
-  user-select: none;
+.three-col {
+  display: grid;
+  grid-template-columns: 1.2fr .8fr 1fr;
+  gap: 8px;
+}
+
+/* Scroll fix from working baseline */
+#invoiceForm.page {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  padding-bottom: 260px !important;
+}
+
+#invoiceForm .wide.primary {
+  margin-bottom: 180px !important;
+  min-height: 58px !important;
+}
+
+#customers.page,
+#jobType.page,
+#created.page,
+#allInvoices.page,
+#settings.page {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+#dashboard.page {
+  overflow-y: hidden !important;
+}
+
+@media (max-width: 520px) {
+  #invoiceForm.page {
+    height: calc(100vh - 72px) !important;
+    max-height: calc(100vh - 72px) !important;
+    overflow-y: auto !important;
+    padding-bottom: 320px !important;
+  }
+
+  #invoiceForm .wide.primary {
+    margin-bottom: 240px !important;
+  }
 }

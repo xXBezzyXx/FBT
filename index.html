@@ -7,28 +7,6 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-
-  <div id="loginScreen" class="login-screen">
-    <div class="login-card">
-      <div class="login-logo">⌾</div>
-      <h1>Invoice Maker</h1>
-      <p>Sign in to continue</p>
-
-      <div class="field login-field">
-        <label>Username</label>
-        <input id="loginUser" type="text" placeholder="Username" autocomplete="username">
-      </div>
-
-      <div class="field login-field">
-        <label>Password</label>
-        <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password">
-      </div>
-
-      <button class="wide primary" onclick="loginApp()">Login</button>
-      <div id="loginError" class="login-error hidden">Wrong username or password.</div>
-    </div>
-  </div>
-
   <div class="app-shell">
     <header class="topbar">
       <button id="backBtn" class="back-btn hidden" onclick="goBack()">‹</button>
@@ -157,9 +135,50 @@
         <input id="formCustomer" type="text" />
       </div>
 
+      <div class="section-mini-title">Billing Information</div>
+
+      <div class="field">
+        <label>Billing Company</label>
+        <input id="billingCompany" type="text" placeholder="Company name" />
+      </div>
+
+      <div class="field">
+        <label>Billing Contact Name</label>
+        <input id="billingName" type="text" placeholder="Contact name" />
+      </div>
+
+      <div class="field">
+        <label>Billing Address</label>
+        <input id="billingAddress" type="text" placeholder="Street address" />
+      </div>
+
+      <div class="three-col">
+        <div class="field">
+          <label>City</label>
+          <input id="billingCity" type="text" placeholder="City" />
+        </div>
+
+        <div class="field">
+          <label>State</label>
+          <input id="billingState" type="text" placeholder="State" />
+        </div>
+
+        <div class="field">
+          <label>Zip</label>
+          <input id="billingZip" type="text" placeholder="Zip" />
+        </div>
+      </div>
+
+      <div class="section-mini-title">Job Information</div>
+
       <div id="shipField" class="field hidden">
         <label>Vessel / Ship Name</label>
         <input id="vesselName" type="text" placeholder="Enter vessel name" />
+      </div>
+
+      <div class="field">
+        <label>Reference / Equipment</label>
+        <input id="referenceNumber" type="text" placeholder="REF# / Equipment / Serial Number" />
       </div>
 
       <div class="field">
@@ -168,8 +187,8 @@
       </div>
 
       <div class="field">
-        <label>Work Performed</label>
-        <textarea id="workPerformed" placeholder="Describe the work"></textarea>
+        <label>Product Description / Work Performed</label>
+        <textarea id="workPerformed" placeholder="Each line will show on the invoice PDF"></textarea>
       </div>
 
       <div class="two-col">
@@ -196,13 +215,13 @@
 
       <div class="field">
         <label>Notes</label>
-        <textarea id="notes" placeholder="Optional notes"></textarea>
+        <textarea id="notes" placeholder="Optional notes shown on the PDF"></textarea>
       </div>
 
       <button class="wide primary" onclick="createInvoice()">Create Invoice</button>
     </main>
 
-    <main id="created" class="page">
+    <main id="created"<main id="created" class="page">
       <section class="success-wrap">
         <div class="success-check">✓</div>
         <h1>Invoice Created!</h1>
@@ -234,7 +253,6 @@
 
         <button class="wide primary" onclick="saveSettings()">Save Settings</button>
         <button class="wide gray" onclick="loadSettings()">Reload Settings</button>
-        <button class="wide outline" onclick="logoutApp()">Log Out</button>
       </section>
     </main>
 

@@ -1,53 +1,4 @@
 
-const LOGIN_USERNAME = 'Margaret';
-const LOGIN_PASSWORD = 'Cahoon11';
-
-function isLoggedIn() {
-  return localStorage.getItem('invoiceMakerLoggedIn') === 'true';
-}
-
-function showLoginIfNeeded() {
-  const loginScreen = document.getElementById('loginScreen');
-
-  if (!isLoggedIn()) {
-    if (loginScreen) loginScreen.classList.remove('hidden');
-    document.body.classList.add('locked');
-    return true;
-  }
-
-  if (loginScreen) loginScreen.classList.add('hidden');
-  document.body.classList.remove('locked');
-  return false;
-}
-
-function loginApp() {
-  const user = document.getElementById('loginUser').value.trim();
-  const pass = document.getElementById('loginPass').value;
-  const error = document.getElementById('loginError');
-
-  if (user === LOGIN_USERNAME && pass === LOGIN_PASSWORD) {
-    localStorage.setItem('invoiceMakerLoggedIn', 'true');
-    if (error) error.classList.add('hidden');
-    showLoginIfNeeded();
-    loadAppData();
-  } else {
-    if (error) error.classList.remove('hidden');
-  }
-}
-
-function logoutApp() {
-  localStorage.removeItem('invoiceMakerLoggedIn');
-  showLoginIfNeeded();
-}
-
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Enter' && !isLoggedIn()) {
-    loginApp();
-  }
-});
-
-
-
 async function apiRequest(action, payload = {}) {
   if (!window.GOOGLE_SCRIPT_URL || !window.GOOGLE_SCRIPT_URL.includes('/exec')) {
     throw new Error('Missing GOOGLE_SCRIPT_URL in config.js');
@@ -206,7 +157,7 @@ function renderAllInvoices() {
   }
 
   list.innerHTML = filtered.map((inv, index) => `
-    <div class="all-invoice-row clickable-invoice" onclick="viewInvoicePdfByNumber('${inv.number}')">
+    <div class="all-invoice-row">
       <div class="all-top">
         <div>
           <div class="all-number">#${inv.number}</div>
@@ -216,8 +167,7 @@ function renderAllInvoices() {
         </div>
         <div>
           <div class="all-total">${money(inv.total)}</div>
-          <button class="pdf-btn" onclick="event.stopPropagation(); viewInvoicePdfByNumber('${inv.number}')">View PDF</button>
-          <button class="${inv.paid ? 'paid-btn' : 'mark-btn'}" onclick="event.stopPropagation(); togglePaidFromAll('${inv.number}')">
+          <button class="${inv.paid ? 'paid-btn' : 'mark-btn'}" onclick="togglePaidFromAll('${inv.number}')">
             ${inv.paid ? 'Paid' : 'Mark Paid'}
           </button>
         </div>
@@ -349,8 +299,15 @@ function openForm(type) {
   currentJobType = type;
 
   document.getElementById('formCustomer').value = selectedCustomer || 'Custom Customer';
+  document.getElementById('billingCompany').value = selectedCustomer || '';
+  document.getElementById('billingName').value = '';
+  document.getElementById('billingAddress').value = '';
+  document.getElementById('billingCity').value = '';
+  document.getElementById('billingState').value = '';
+  document.getElementById('billingZip').value = '';
   document.getElementById('shipField').classList.toggle('hidden', type !== 'Ship Work');
 
+  document.getElementById('referenceNumber').value = '';
   document.getElementById('jobLocation').value = '';
   document.getElementById('workPerformed').value = '';
   document.getElementById('hours').value = 1;
@@ -381,6 +338,13 @@ async function createInvoice() {
   const inv = {
     number: 'INV-' + invoiceCounter,
     customer,
+    billingCompany: document.getElementById('billingCompany').value || customer,
+    billingName: document.getElementById('billingName').value || '',
+    billingAddress: document.getElementById('billingAddress').value || '',
+    billingCity: document.getElementById('billingCity').value || '',
+    billingState: document.getElementById('billingState').value || '',
+    billingZip: document.getElementById('billingZip').value || '',
+    referenceNumber: document.getElementById('referenceNumber').value || '',
     jobType: currentJobType,
     vessel: document.getElementById('vesselName') ? document.getElementById('vesselName').value : '',
     location: document.getElementById('jobLocation').value || '',
@@ -542,36 +506,6 @@ async function sendCreatedInvoiceEmail() {
   }
 }
 
-
-async function viewInvoicePdfByNumber(invoiceNumber) {
-  if (!invoiceNumber) {
-    alert('No invoice selected.');
-    return;
-  }
-
-  let popup = window.open('', '_blank');
-
-  try {
-    showLoading('Creating PDF...');
-    const result = await apiRequest('generateInvoicePdf', { invoiceNumber });
-
-    if (!result || !result.pdfUrl) {
-      throw new Error('PDF URL was not returned.');
-    }
-
-    if (popup) {
-      popup.location.href = result.pdfUrl;
-    } else {
-      window.location.href = result.pdfUrl;
-    }
-  } catch (err) {
-    if (popup) popup.close();
-    alert('Could not open PDF: ' + err.message);
-  } finally {
-    hideLoading();
-  }
-}
-
 async function viewCreatedInvoicePdf() {
   const invoiceNumber =
     currentCreatedInvoiceNumber ||
@@ -605,5 +539,4 @@ async function viewCreatedInvoicePdf() {
   }
 }
 
-showLoginIfNeeded();
-if (isLoggedIn()) loadAppData();
+loadAppData();

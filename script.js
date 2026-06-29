@@ -40,7 +40,14 @@ function formatDate(dateText) {
 function renderInvoices() {
   const grid = document.getElementById('invoiceGrid');
 
-  grid.innerHTML = invoices.map((inv, index) => `
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 14);
+
+  const recentInvoices = invoices.filter(inv => new Date(inv.date + 'T00:00:00') >= cutoff);
+
+  grid.innerHTML = recentInvoices.map((inv) => {
+    const index = invoices.findIndex(x => x.number === inv.number);
+    return `
     <div class="invoice-card">
       <div class="invoice-number">#${inv.number}</div>
       <div class="invoice-date">${formatDate(inv.date)}</div>
@@ -51,7 +58,8 @@ function renderInvoices() {
         ${inv.paid ? 'Paid' : 'Mark as paid'}
       </button>
     </div>
-  `).join('');
+  `;
+  }).join('');
 
   updateSummary();
 }

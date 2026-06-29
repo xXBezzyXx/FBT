@@ -118,14 +118,14 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   column-gap: 16px;
-  row-gap: 24px;
+  row-gap: 22px;
 }
 
 .scroll-invoices {
-  height: 380px;
+  height: 405px;
   overflow-y: auto;
   padding-right: 6px;
-  padding-bottom: 135px;
+  padding-bottom: 175px;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -133,22 +133,23 @@ body {
   background: var(--card);
   border-radius: 14px;
   padding: 16px;
-  min-height: 205px;
+  min-height: 238px;
   box-shadow: var(--shadow);
   display: flex;
   flex-direction: column;
+  overflow: visible;
 }
 
 .invoice-number {
   color: #8c8f99;
   font-size: 14px;
-  margin-bottom: 10px;
+  margin-bottom: 9px;
 }
 
 .invoice-date {
   color: #9aa0aa;
   font-size: 12px;
-  margin-bottom: 10px;
+  margin-bottom: 9px;
 }
 
 .invoice-label { font-size: 14px; font-weight: 700; }
@@ -494,18 +495,7 @@ textarea { min-height: 62px; resize: none; }
 #dashboard.page { overflow-y: hidden; }
 
 
-@media (max-width: 520px) {
-  .scroll-invoices {
-    height: calc(100vh - 390px);
-    min-height: 350px;
-    overflow-y: auto;
-    padding-bottom: 140px;
-  }
 
-  #dashboard.page {
-    overflow-y: hidden;
-  }
-}
 
 
 .scroll-invoices::-webkit-scrollbar {
@@ -519,4 +509,18 @@ textarea { min-height: 62px; resize: none; }
 
 .scroll-invoices::-webkit-scrollbar-track {
   background: transparent;
+}
+
+
+@media (max-width: 520px) {
+  .scroll-invoices {
+    height: calc(100vh - 385px);
+    min-height: 345px;
+    overflow-y: auto;
+    padding-bottom: 180px;
+  }
+
+  #dashboard.page {
+    overflow-y: hidden;
+  }
 }

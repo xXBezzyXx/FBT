@@ -278,10 +278,9 @@ function openForm(type) {
   calculateTotal();
   showPage('invoiceForm');
   setTimeout(function() {
-    const appShell = document.querySelector('.app-shell');
-    if (appShell) appShell.scrollTop = 0;
-    window.scrollTo(0, 0);
-  }, 50);
+    const formPage = document.getElementById('invoiceForm');
+    if (formPage) formPage.scrollTop = 0;
+  }, 100);
 }
 
 function calculateTotal() {
@@ -344,10 +343,8 @@ function markLastPaid() {
 }
 
 function showPage(pageId) {
-  const appShell = document.querySelector('.app-shell');
-  if (appShell) appShell.classList.toggle('form-mode', pageId === 'invoiceForm');
-  document.body.classList.toggle('form-mode-body', pageId === 'invoiceForm');
-  document.documentElement.classList.toggle('form-mode-html', pageId === 'invoiceForm');
+  document.body.classList.toggle('invoice-form-open', pageId === 'invoiceForm');
+  document.documentElement.classList.toggle('invoice-form-open', pageId === 'invoiceForm');
 
   document.querySelectorAll('.page').forEach(page => {
     page.classList.remove('active');

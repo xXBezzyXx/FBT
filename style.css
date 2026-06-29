@@ -575,56 +575,25 @@ textarea { min-height: 62px; resize: none; }
 }
 
 
-/* Added invoice PDF fields */
-.section-mini-title {
-  font-size: 14px;
-  font-weight: 900;
-  color: #0b55e9;
-  margin: 14px 0 8px;
+/* PDF buttons and clickable invoices */
+.clickable-invoice {
+  cursor: pointer;
+  transition: transform 0.12s ease;
 }
 
-.three-col {
-  display: grid;
-  grid-template-columns: 1.2fr .8fr 1fr;
-  gap: 8px;
+.clickable-invoice:active {
+  transform: scale(0.98);
 }
 
-/* Scroll fix from working baseline */
-#invoiceForm.page {
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  -webkit-overflow-scrolling: touch !important;
-  padding-bottom: 260px !important;
-}
-
-#invoiceForm .wide.primary {
-  margin-bottom: 180px !important;
-  min-height: 58px !important;
-}
-
-#customers.page,
-#jobType.page,
-#created.page,
-#allInvoices.page,
-#settings.page {
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  -webkit-overflow-scrolling: touch !important;
-}
-
-#dashboard.page {
-  overflow-y: hidden !important;
-}
-
-@media (max-width: 520px) {
-  #invoiceForm.page {
-    height: calc(100vh - 72px) !important;
-    max-height: calc(100vh - 72px) !important;
-    overflow-y: auto !important;
-    padding-bottom: 320px !important;
-  }
-
-  #invoiceForm .wide.primary {
-    margin-bottom: 240px !important;
-  }
+.pdf-btn {
+  width: 100%;
+  border: 0;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 15px;
+  cursor: pointer;
+  margin-top: 10px;
+  background: #064be0;
+  color: #fff;
+  font-weight: 800;
 }

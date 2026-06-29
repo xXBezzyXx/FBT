@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <?!= include('Styles'); ?>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script>
+    let appData = { customers: [], company: {} };
+    let selectedCustomer = null;
+    let selectedJobType = null;
+
+    const app = document.getElementById('app');
+
+    function showLogin() {
+      app.innerHTML = `
+        <div class="screen center-screen">
+          <div class="card login-card">
+            <div class="logo">Invoice</div>
+            <h1>Field Invoice</h1>
+            <p class="muted">Enter password to continue</p>
+            <input id="password" type="password" placeholder="Password" onkeydown="if(event.key==='Enter') handleLogin()">
+            <button onclick="handleLogin()">Login</button>
+            <div id="loginError" class="error"></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function handleLogin() {
+      const password = document.getElementById('password').value;
+      setLoading(true);
+      google.script.run
+        .withSuccessHandler(ok => {
+          if (!ok) {
+            setLoading(false);
+            document.getElementById('loginError').textContent = 'Wrong password.';
+            return;
+          }
+          loadInitialData();
+        })
+        .withFailureHandler(showError)
+        .login(password);
+    }
+
+    function loadInitialData() {
+      google.script.run
+        .withSuccessHandler(data => {
+          appData = data;
+          setLoading(false);
+          showCustomers();
+        })
+        .withFailureHandler(showError)
+        .getInitialData();
+    }
+
+    function showCustomers() {
+      const customerButtons = appData.customers.map((c, index) => `
+        <button class="list-btn" onclick="selectCustomer(${index})">
+          <span>${escapeHtml(c.name)}</span>
+          <small>${escapeHtml(c.address || c.phone || '')}</small>
+        </button>
+      `).join('');
+
+      app.innerHTML = `
+        <div class="screen">
+          <div class="header">
+            <h1>Customers</h1>
+            <p>Select a customer or use custom for a one-off job.</p>
+          </div>
+          <div class="list">
+            ${customerButtons || '<p class="muted">No customers yet. Add them in the Customers sheet.</p>'}
+          </div>
+          <div class="bottom-bar">
+            <button class="secondary" onclick="showCustomCustomer()">Custom / One-Off Job</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function selectCustomer(index) {
+      selectedCustomer = appData.customers[index];
+      showJobType();
+    }
+
+    function showCustomCustomer() {
+      selectedCustomer = { name: '', email: '', address: '', phone: '', custom: true };
+      app.innerHTML = `
+        <div class="screen">
+          <button class="back" onclick="showCustomers()">← Back</button>
+          <div class="header"><h1>Custom Customer</h1></div>
+          <div class="card">
+            <label>Customer Name</label>
+            <input id="customName" placeholder="Customer name">
+            <label>Email</label>
+            <input id="customEmail" placeholder="Customer email">
+            <label>Address</label>
+            <textarea id="customAddress" placeholder="Customer address"></textarea>
+            <label>Phone</label>
+            <input id="customPhone" placeholder="Customer phone">
+            <button onclick="saveCustomCustomer()">Continue</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function saveCustomCustomer() {
+      selectedCustomer = {
+        name: val('customName'),
+        email: val('customEmail'),
+        address: val('customAddress'),
+        phone: val('customPhone'),
+        custom: true
+      };
+      if (!selectedCustomer.name) return alert('Customer name is required.');
+      showJobType();
+    }
+
+    function showJobType() {
+      app.innerHTML = `
+        <div class="screen center-screen">
+          <button class="back top-left" onclick="showCustomers()">← Back</button>
+          <div class="card">
+            <h1>${escapeHtml(selectedCustomer.name)}</h1>
+            <p class="muted">What kind of job are you doing?</p>
+            <button onclick="selectJobType('Washing')">Washing</button>
+            <button onclick="selectJobType('Ship Work')" class="secondary">Ship Work</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function selectJobType(type) {
+      selectedJobType = type;
+      showInvoiceForm();
+    }
+
+    function showInvoiceForm() {
+      const isShip = selectedJobType === 'Ship Work';
+      app.innerHTML = `
+        <div class="screen">
+          <button class="back" onclick="showJobType()">← Back</button>
+          <div class="header">
+            <h1>${escapeHtml(selectedJobType)}</h1>
+            <p>${escapeHtml(selectedCustomer.name)}</p>
+          </div>
+
+          <div class="card">
+            <label>Job Date</label>
+            <input id="jobDate" type="date" value="${new Date().toISOString().slice(0,10)}">
+
+            <label>Job Location</label>
+            <input id="location" placeholder="Location">
+
+            ${isShip ? `
+              <label>Vessel / Ship Name</label>
+              <input id="vesselName" placeholder="Vessel / ship name">
+            ` : `<input id="vesselName" type="hidden" value="">`}
+
+            <label>Work Performed</label>
+            <textarea id="description" placeholder="Describe the work completed"></textarea>
+
+            <div class="split-title">Price Option</div>
+            <p class="muted small">Use flat price OR labor/materials. If flat price is filled in, it will use that.</p>
+
+            <label>Flat Price</label>
+            <input id="flatPrice" type="number" step="0.01" placeholder="0.00">
+
+            <label>Labor Hours</label>
+            <input id="laborHours" type="number" step="0.25" placeholder="0">
+
+            <label>Labor Rate</label>
+            <input id="laborRate" type="number" step="0.01" placeholder="0.00">
+
+            <label>Materials</label>
+            <input id="materials" type="number" step="0.01" placeholder="0.00">
+
+            <label>Notes</label>
+            <textarea id="notes" placeholder="Notes for invoice or office"></textarea>
+
+            <button onclick="submitInvoice()">Create & Email Invoice</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function submitInvoice() {
+      const payload = {
+        customerName: selectedCustomer.name,
+        customerEmail: selectedCustomer.email,
+        customerAddress: selectedCustomer.address,
+        customerPhone: selectedCustomer.phone,
+        jobType: selectedJobType,
+        jobDate: val('jobDate'),
+        location: val('location'),
+        vesselName: val('vesselName'),
+        description: val('description'),
+        flatPrice: val('flatPrice'),
+        laborHours: val('laborHours'),
+        laborRate: val('laborRate'),
+        materials: val('materials'),
+        notes: val('notes')
+      };
+
+      if (!payload.description) return alert('Work performed is required.');
+      if (!payload.flatPrice && (!payload.laborHours || !payload.laborRate)) {
+        return alert('Enter a flat price or labor hours and labor rate.');
+      }
+
+      app.innerHTML = `
+        <div class="screen center-screen">
+          <div class="card center">
+            <div class="spinner"></div>
+            <h1>Creating Invoice...</h1>
+            <p class="muted">Please do not close this screen.</p>
+          </div>
+        </div>
+      `;
+
+      google.script.run
+        .withSuccessHandler(result => showSuccess(result))
+        .withFailureHandler(showError)
+        .submitInvoice(payload);
+    }
+
+    function showSuccess(result) {
+      app.innerHTML = `
+        <div class="screen center-screen">
+          <div class="card center">
+            <div class="success-check">✓</div>
+            <h1>Invoice Sent</h1>
+            <p><strong>${escapeHtml(result.invoiceNo)}</strong></p>
+            <p class="muted">Total: $${Number(result.total).toFixed(2)}</p>
+            <a class="button-link" href="${result.pdfUrl}" target="_blank">Open PDF</a>
+            <button class="secondary" onclick="resetApp()">Create Another Invoice</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function resetApp() {
+      selectedCustomer = null;
+      selectedJobType = null;
+      loadInitialData();
+    }
+
+    function val(id) {
+      const el = document.getElementById(id);
+      return el ? el.value.trim() : '';
+    }
+
+    function setLoading(isLoading) {
+      let existing = document.getElementById('loadingOverlay');
+      if (isLoading && !existing) {
+        const div = document.createElement('div');
+        div.id = 'loadingOverlay';
+        div.innerHTML = '<div class="spinner"></div>';
+        document.body.appendChild(div);
+      }
+      if (!isLoading && existing) existing.remove();
+    }
+
+    function showError(error) {
+      setLoading(false);
+      app.innerHTML = `
+        <div class="screen center-screen">
+          <div class="card center">
+            <h1>Something went wrong</h1>
+            <p class="error">${escapeHtml(error.message || error)}</p>
+            <button onclick="showLogin()">Start Over</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function escapeHtml(text) {
+      return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    showLogin();
+  </script>
+</body>
+</html>

@@ -573,3 +573,52 @@ textarea { min-height: 62px; resize: none; }
 .wide-empty {
   grid-column: 1 / -1;
 }
+
+
+/* =========================================================
+   SCROLL FIX - INVOICE DETAILS PAGE
+   This keeps the main dashboard the same, but allows the
+   Washing / Ship Work invoice form to scroll all the way down.
+   ========================================================= */
+
+#invoiceForm.page {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  padding-bottom: 260px !important;
+}
+
+#invoiceForm .wide.primary {
+  margin-bottom: 180px !important;
+  min-height: 58px !important;
+}
+
+/* Keep customer, job type, created, and all invoices able to scroll if needed */
+#customers.page,
+#jobType.page,
+#created.page,
+#allInvoices.page,
+#settings.page {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+/* Dashboard should not double-scroll. Recent invoices still scroll by themselves. */
+#dashboard.page {
+  overflow-y: hidden !important;
+}
+
+/* Mobile safe area */
+@media (max-width: 520px) {
+  #invoiceForm.page {
+    height: calc(100vh - 72px) !important;
+    max-height: calc(100vh - 72px) !important;
+    overflow-y: auto !important;
+    padding-bottom: 320px !important;
+  }
+
+  #invoiceForm .wide.primary {
+    margin-bottom: 240px !important;
+  }
+}

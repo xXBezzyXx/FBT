@@ -1,29 +1,78 @@
+
+async function apiRequest(action, payload = {}) {
+  if (!window.GOOGLE_SCRIPT_URL || !GOOGLE_SCRIPT_URL.includes('/exec')) {
+    throw new Error('Missing GOOGLE_SCRIPT_URL in config.js');
+  }
+
+  const response = await fetch(GOOGLE_SCRIPT_URL, {
+    method: 'POST',
+    mode: 'cors',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action, payload })
+  });
+
+  const text = await response.text();
+
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch (err) {
+    throw new Error('Bad response from Apps Script: ' + text.substring(0, 120));
+  }
+
+  if (!data.success) {
+    throw new Error(data.error || 'Apps Script request failed');
+  }
+
+  return data.data;
+}
+
+function showLoading(message) {
+  let overlay = document.getElementById('loadingOverlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'loadingOverlay';
+    overlay.innerHTML = '<div class="loadingBox" id="loadingMessage"></div>';
+    document.body.appendChild(overlay);
+  }
+
+  document.getElementById('loadingMessage').innerText = message || 'Loading...';
+  overlay.style.display = 'flex';
+}
+
+function hideLoading() {
+  const overlay = document.getElementById('loadingOverlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+async function loadAppData() {
+  try {
+    showLoading('Loading invoices...');
+    const data = await apiRequest('getAppData');
+
+    customers = data.customers || [];
+    invoices = data.invoices || [];
+    invoiceCounter = data.nextInvoiceNumber || invoiceCounter;
+
+    renderInvoices();
+    renderAllInvoices();
+  } catch (err) {
+    console.warn(err);
+    alert('Could not connect to Google Script yet. Showing test data. Error: ' + err.message);
+    renderInvoices();
+    renderAllInvoices();
+  } finally {
+    hideLoading();
+  }
+}
+
 let selectedCustomer = '';
 let currentJobType = '';
 let invoiceCounter = 1013;
 
-const customers = [
-  'Emy Watson',
-  'Nate O’Brien',
-  'Jane Cook',
-  'John Doe',
-  'ABC Marine'
-];
+let customers = [];
 
-let invoices = [
-  { number: 'INV-1012', customer: 'ABC Marine', total: 650, paid: false, date: '2026-06-28' },
-  { number: 'INV-1011', customer: 'Port Authority', total: 1250, paid: true, date: '2026-06-24' },
-  { number: 'INV-1010', customer: 'Emy Watson', total: 1332, paid: false, date: '2026-06-20' },
-  { number: 'INV-1009', customer: 'Nate O’Brien', total: 844, paid: true, date: '2026-06-13' },
-  { number: 'INV-1008', customer: 'Jane Cook', total: 1161, paid: true, date: '2026-05-29' },
-  { number: 'INV-1007', customer: 'John Doe', total: 1589, paid: false, date: '2026-05-18' },
-  { number: 'INV-1006', customer: 'ABC Marine', total: 720, paid: true, date: '2026-04-22' },
-  { number: 'INV-1005', customer: 'Port Authority', total: 975, paid: false, date: '2026-04-10' },
-  { number: 'INV-1004', customer: 'Emy Watson', total: 410, paid: true, date: '2025-12-12' },
-  { number: 'INV-1003', customer: 'Nate O’Brien', total: 300, paid: false, date: '2025-11-05' },
-  { number: 'INV-1002', customer: 'Jane Cook', total: 1120, paid: true, date: '2025-08-21' },
-  { number: 'INV-1001', customer: 'John Doe', total: 540, paid: true, date: '2025-07-16' }
-];
+let invoices = [];
 
 function money(value) {
   return '$' + Number(value || 0).toLocaleString(undefined, {
@@ -44,6 +93,18 @@ function renderInvoices() {
   cutoff.setDate(cutoff.getDate() - 14);
 
   const recentInvoices = invoices.filter(inv => new Date(inv.date + 'T00:00:00') >= cutoff);
+
+  if (!recentInvoices.length) {
+    grid.innerHTML = `
+      <div class="empty-state wide-empty">
+        <div class="empty-icon">🧾</div>
+        <h3>No Recent Invoices</h3>
+        <p>Invoices from the last 14 days will show here.</p>
+      </div>
+    `;
+    updateSummary();
+    return;
+  }
 
   grid.innerHTML = recentInvoices.map((inv) => {
     const index = invoices.findIndex(x => x.number === inv.number);
@@ -81,7 +142,13 @@ function renderAllInvoices() {
   });
 
   if (!filtered.length) {
-    list.innerHTML = '<div class="settings-card"><h2>No invoices found</h2><p>Try clearing the filters.</p></div>';
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📄</div>
+        <h3>No Invoices Found</h3>
+        <p>Add invoices to the sheet or create one from the app.</p>
+      </div>
+    `;
     return;
   }
 
@@ -137,32 +204,73 @@ function updateSummary() {
   document.getElementById('thisMonthTotal').innerText = money(thisMonth);
 }
 
-function togglePaid(index) {
-  invoices[index].paid = !invoices[index].paid;
+async function togglePaid(index) {
+  const inv = invoices[index];
+  if (!inv) return;
+
+  const oldStatus = inv.paid;
+  inv.paid = !inv.paid;
   renderInvoices();
   renderAllInvoices();
+
+  try {
+    await apiRequest('updateInvoicePaid', { invoiceNumber: inv.number, paid: inv.paid });
+  } catch (err) {
+    inv.paid = oldStatus;
+    renderInvoices();
+    renderAllInvoices();
+    alert('Could not update paid status: ' + err.message);
+  }
 }
 
-function togglePaidFromAll(invoiceNumber) {
+async function togglePaidFromAll(invoiceNumber) {
   const inv = invoices.find(x => x.number === invoiceNumber);
-  if (inv) inv.paid = !inv.paid;
+  if (!inv) return;
+
+  const oldStatus = inv.paid;
+  inv.paid = !inv.paid;
   renderInvoices();
   renderAllInvoices();
+
+  try {
+    await apiRequest('updateInvoicePaid', { invoiceNumber: inv.number, paid: inv.paid });
+  } catch (err) {
+    inv.paid = oldStatus;
+    renderInvoices();
+    renderAllInvoices();
+    alert('Could not update paid status: ' + err.message);
+  }
 }
 
 function renderCustomers() {
   const customerList = document.getElementById('customerList');
 
-  customerList.innerHTML = customers.map(name => `
-    <button class="row-card" onclick="selectCustomer('${name.replace(/'/g, "\\'")}')">
-      <span>${name}</span>
-      <span class="arrow">›</span>
-    </button>
-  `).join('') + `
+  let html = '';
+
+  if (!customers.length) {
+    html += `
+      <div class="empty-state">
+        <div class="empty-icon">👤</div>
+        <h3>No Customers Yet</h3>
+        <p>Add customer names to the Customers sheet or use Custom / One-Off Job.</p>
+      </div>
+    `;
+  } else {
+    html += customers.map(name => `
+      <button class="row-card" onclick="selectCustomer('${name.replace(/'/g, "\'")}')">
+        <span>${name}</span>
+        <span class="arrow">›</span>
+      </button>
+    `).join('');
+  }
+
+  html += `
     <button class="row-card custom-row" onclick="customCustomer()">
       <span>＋ Custom / One-Off Job</span>
     </button>
   `;
+
+  customerList.innerHTML = html;
 }
 
 function startInvoice() {
@@ -209,7 +317,7 @@ function calculateTotal() {
   document.getElementById('totalAmount').value = total.toFixed(2);
 }
 
-function createInvoice() {
+async function createInvoice() {
   const total = Number(document.getElementById('totalAmount').value || 0);
   const customer = document.getElementById('formCustomer').value || selectedCustomer || 'Custom Customer';
 
@@ -219,27 +327,53 @@ function createInvoice() {
   const inv = {
     number: 'INV-' + invoiceCounter,
     customer,
+    jobType: currentJobType,
+    vessel: document.getElementById('vesselName') ? document.getElementById('vesselName').value : '',
+    location: document.getElementById('jobLocation').value || '',
+    workPerformed: document.getElementById('workPerformed').value || '',
+    hours: Number(document.getElementById('hours').value || 0),
+    rate: Number(document.getElementById('rate').value || 0),
+    materials: Number(document.getElementById('materials').value || 0),
     total,
     paid: false,
-    date: isoDate
+    date: isoDate,
+    notes: document.getElementById('notes').value || ''
   };
 
-  invoiceCounter++;
-  invoices.unshift(inv);
+  try {
+    showLoading('Saving invoice...');
+    const saved = await apiRequest('saveInvoice', inv);
 
-  document.getElementById('createdNumber').innerText = inv.number;
-  document.getElementById('createdCustomer').innerText = inv.customer;
-  document.getElementById('createdTotal').innerText = money(inv.total);
-  document.getElementById('createdStatus').innerText = 'Unpaid';
+    invoices.unshift(saved);
+    invoiceCounter++;
 
-  renderInvoices();
-  renderAllInvoices();
-  showPage('created');
+    document.getElementById('createdNumber').innerText = saved.number;
+    document.getElementById('createdCustomer').innerText = saved.customer;
+    document.getElementById('createdTotal').innerText = money(saved.total);
+    document.getElementById('createdStatus').innerText = saved.paid ? 'Paid' : 'Unpaid';
+
+    renderInvoices();
+    renderAllInvoices();
+    showPage('created');
+  } catch (err) {
+    alert('Could not save invoice: ' + err.message);
+  } finally {
+    hideLoading();
+  }
 }
 
-function markLastPaid() {
+async function markLastPaid() {
   if (invoices.length > 0) {
-    invoices[0].paid = true;
+    const inv = invoices[0];
+    const oldStatus = inv.paid;
+    inv.paid = true;
+
+    try {
+      await apiRequest('updateInvoicePaid', { invoiceNumber: inv.number, paid: true });
+    } catch (err) {
+      inv.paid = oldStatus;
+      alert('Could not update paid status: ' + err.message);
+    }
   }
 
   renderInvoices();
@@ -293,5 +427,4 @@ function goBack() {
   else showPage('dashboard');
 }
 
-renderInvoices();
-renderAllInvoices();
+loadAppData();

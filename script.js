@@ -1,10 +1,10 @@
 
 async function apiRequest(action, payload = {}) {
-  if (!window.GOOGLE_SCRIPT_URL || !GOOGLE_SCRIPT_URL.includes('/exec')) {
+  if (!window.GOOGLE_SCRIPT_URL || !window.GOOGLE_SCRIPT_URL.includes('/exec')) {
     throw new Error('Missing GOOGLE_SCRIPT_URL in config.js');
   }
 
-  const response = await fetch(GOOGLE_SCRIPT_URL, {
+  const response = await fetch(window.GOOGLE_SCRIPT_URL, {
     method: 'POST',
     mode: 'cors',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },

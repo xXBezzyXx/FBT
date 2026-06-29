@@ -553,4 +553,48 @@ textarea { min-height: 62px; resize: none; }
   padding-bottom: 180px !important;
 }
 
+
+
+/* Strong invoice form bottom safe-area fix */
+#invoiceForm.page {
+  height: calc(100% - 72px) !important;
+  overflow-y: scroll !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 360px !important;
+}
+
+#invoiceForm::after {
+  content: "";
+  display: block;
+  height: 260px;
+}
+
+#invoiceForm .primary {
+  display: block;
+  margin-bottom: 220px !important;
+  min-height: 58px;
+}
+
+/* Make sure hidden bottom nav/fab never cover form screens */
+#invoiceForm ~ .bottom-nav,
+#invoiceForm ~ .fab {
+  pointer-events: none;
+}
+
+/* Mobile extra room */
+@media (max-width: 520px) {
+  #invoiceForm.page {
+    padding-bottom: 420px !important;
+  }
+
+  #invoiceForm::after {
+    height: 300px;
+  }
+
+  #invoiceForm .primary {
+    margin-bottom: 260px !important;
+  }
+}
+
 </style>

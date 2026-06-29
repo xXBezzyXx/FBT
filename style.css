@@ -66,7 +66,7 @@ body {
   display: none;
   padding: 18px 22px 24px;
   height: calc(100% - 72px);
-  overflow-y: auto;
+  overflow-y: hidden;
   padding-bottom: 110px;
 }
 
@@ -484,3 +484,6 @@ textarea { min-height: 62px; resize: none; }
     position: fixed;
   }
 }
+
+#allInvoices.page{overflow-y:auto;}
+#dashboard.page{overflow-y:hidden;}

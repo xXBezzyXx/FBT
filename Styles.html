@@ -528,28 +528,47 @@ textarea { min-height: 62px; resize: none; }
 }
 
 
-/* Two-step invoice form fix */
-#invoiceForm.page,
-#billingForm.page {
+/* Compact invoice form fix - keeps original app working */
+#invoiceForm.page {
   overflow-y: auto !important;
   overflow-x: hidden !important;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: 160px !important;
+  -webkit-overflow-scrolling: touch !important;
+  padding-bottom: 240px !important;
 }
 
-#invoiceForm .wide:last-child,
-#billingForm .wide:last-child {
-  margin-bottom: 80px;
+#invoiceForm .field {
+  padding: 6px 10px !important;
+  margin-bottom: 8px !important;
 }
 
-#billingForm .primary {
-  min-height: 58px;
+#invoiceForm textarea {
+  min-height: 46px !important;
+}
+
+#invoiceForm .form-heading {
+  margin: 4px 0 10px !important;
+}
+
+#invoiceForm .wide.primary {
+  min-height: 58px !important;
+  margin-bottom: 160px !important;
+}
+
+#invoiceForm input,
+#invoiceForm textarea {
+  font-size: 15px !important;
 }
 
 @media (max-width: 520px) {
-  #invoiceForm.page,
-  #billingForm.page {
-    padding-bottom: 180px !important;
+  #invoiceForm.page {
+    height: calc(100vh - 72px) !important;
+    max-height: calc(100vh - 72px) !important;
+    overflow-y: auto !important;
+    padding-bottom: 300px !important;
+  }
+
+  #invoiceForm .wide.primary {
+    margin-bottom: 220px !important;
   }
 }
 

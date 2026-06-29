@@ -126,7 +126,7 @@
     </main>
 
     <main id="invoiceForm" class="page">
-      <h2 class="form-heading">Job Details</h2>
+      <h2 class="form-heading">Invoice Details</h2>
 
       <div class="field">
         <label>Customer</label>
@@ -147,13 +147,6 @@
         <label>Work Performed</label>
         <textarea id="workPerformed" placeholder="Describe the work"></textarea>
       </div>
-
-      <button class="wide primary" onclick="showPage('billingForm')">Next</button>
-      <button class="wide gray" onclick="showPage('jobType')">Back</button>
-    </main>
-
-    <main id="billingForm" class="page">
-      <h2 class="form-heading">Billing Details</h2>
 
       <div class="two-col">
         <div class="field">
@@ -183,10 +176,9 @@
       </div>
 
       <button class="wide primary" onclick="createInvoice()">Create Invoice</button>
-      <button class="wide gray" onclick="showPage('invoiceForm')">Back</button>
     </main>
 
-    <main id="created"<main id="created" class="page">
+    <main id="created" class="page">
       <section class="success-wrap">
         <div class="success-check">✓</div>
         <h1>Invoice Created!</h1>

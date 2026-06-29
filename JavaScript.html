@@ -277,6 +277,10 @@ function openForm(type) {
 
   calculateTotal();
   showPage('invoiceForm');
+  setTimeout(function() {
+    var formPage = document.getElementById('invoiceForm');
+    if (formPage) formPage.scrollTop = 0;
+  }, 50);
 }
 
 function calculateTotal() {
@@ -343,15 +347,19 @@ function showPage(pageId) {
     page.classList.remove('active');
   });
 
-  document.getElementById(pageId).classList.add('active');
+  var targetPage = document.getElementById(pageId);
+  if (!targetPage) {
+    alert('Page not found: ' + pageId);
+    return;
+  }
+  targetPage.classList.add('active');
 
   const titles = {
     dashboard: 'Invoice Maker',
     allInvoices: 'All Invoices',
     customers: 'Select Customer',
     jobType: 'Select Job Type',
-    invoiceForm: currentJobType || 'Job Details',
-    billingForm: 'Billing Details',
+    invoiceForm: currentJobType || 'Invoice Details',
     created: 'Invoice Created',
     settings: 'Settings'
   };
@@ -380,7 +388,6 @@ function goBack() {
   if (active === 'allInvoices') showPage('dashboard');
   else if (active === 'customers') showPage('dashboard');
   else if (active === 'jobType') showPage('customers');
-  else if (active === 'billingForm') showPage('invoiceForm');
   else if (active === 'invoiceForm') showPage('jobType');
   else if (active === 'created') showPage('dashboard');
   else showPage('dashboard');

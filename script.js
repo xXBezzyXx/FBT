@@ -157,7 +157,7 @@ function renderAllInvoices() {
   }
 
   list.innerHTML = filtered.map((inv, index) => `
-    <div class="all-invoice-row">
+    <div class="all-invoice-row clickable-invoice" onclick="viewInvoicePdfByNumber('${inv.number}')">
       <div class="all-top">
         <div>
           <div class="all-number">#${inv.number}</div>
@@ -167,7 +167,8 @@ function renderAllInvoices() {
         </div>
         <div>
           <div class="all-total">${money(inv.total)}</div>
-          <button class="${inv.paid ? 'paid-btn' : 'mark-btn'}" onclick="togglePaidFromAll('${inv.number}')">
+          <button class="pdf-btn" onclick="event.stopPropagation(); viewInvoicePdfByNumber('${inv.number}')">View PDF</button>
+          <button class="${inv.paid ? 'paid-btn' : 'mark-btn'}" onclick="event.stopPropagation(); togglePaidFromAll('${inv.number}')">
             ${inv.paid ? 'Paid' : 'Mark Paid'}
           </button>
         </div>
@@ -487,6 +488,36 @@ async function sendCreatedInvoiceEmail() {
     alert('Invoice emailed to: ' + result.sentTo);
   } catch (err) {
     alert('Could not send invoice email: ' + err.message);
+  } finally {
+    hideLoading();
+  }
+}
+
+
+async function viewInvoicePdfByNumber(invoiceNumber) {
+  if (!invoiceNumber) {
+    alert('No invoice selected.');
+    return;
+  }
+
+  let popup = window.open('', '_blank');
+
+  try {
+    showLoading('Creating PDF...');
+    const result = await apiRequest('generateInvoicePdf', { invoiceNumber });
+
+    if (!result || !result.pdfUrl) {
+      throw new Error('PDF URL was not returned.');
+    }
+
+    if (popup) {
+      popup.location.href = result.pdfUrl;
+    } else {
+      window.location.href = result.pdfUrl;
+    }
+  } catch (err) {
+    if (popup) popup.close();
+    alert('Could not open PDF: ' + err.message);
   } finally {
     hideLoading();
   }

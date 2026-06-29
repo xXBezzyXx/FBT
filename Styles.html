@@ -528,57 +528,61 @@ textarea { min-height: 62px; resize: none; }
 }
 
 
-/* HARD FIX: Washing / Ship Work invoice form must scroll */
-#invoiceForm.page {
-  position: absolute !important;
-  top: 72px !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  height: auto !important;
-  max-height: none !important;
+/* FORM MODE FIX:
+   When Washing or Ship Work opens, the app shell unlocks and the whole form can scroll.
+*/
+.app-shell.form-mode {
+  height: 100vh !important;
+  min-height: 100vh !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
+  padding-bottom: 0 !important;
   -webkit-overflow-scrolling: touch !important;
-  padding: 18px 22px 260px !important;
 }
 
-#invoiceForm.page.active {
+.app-shell.form-mode #invoiceForm.page {
   display: block !important;
+  position: relative !important;
+  height: auto !important;
+  min-height: calc(100vh - 72px) !important;
+  overflow: visible !important;
+  padding-bottom: 280px !important;
 }
 
-#invoiceForm .primary {
+.app-shell.form-mode #invoiceForm .primary {
   min-height: 58px !important;
-  margin-bottom: 180px !important;
+  margin-bottom: 220px !important;
 }
 
-/* Keep other pages normal */
-#customers.page,
-#jobType.page,
-#created.page,
-#allInvoices.page {
+.app-shell.form-mode .fab,
+.app-shell.form-mode .bottom-nav {
+  display: none !important;
+}
+
+body.form-mode-body {
   overflow-y: auto !important;
-  -webkit-overflow-scrolling: touch !important;
-  padding-bottom: 160px !important;
 }
 
-/* Dashboard should still only scroll recent invoice cards */
-#dashboard.page {
-  overflow-y: hidden !important;
+html.form-mode-html {
+  overflow-y: auto !important;
 }
 
-/* Mobile form scroll */
 @media (max-width: 520px) {
-  #invoiceForm.page {
-    top: 72px !important;
-    bottom: 0 !important;
-    height: auto !important;
+  .app-shell.form-mode {
+    height: 100vh !important;
+    min-height: 100vh !important;
     overflow-y: auto !important;
-    padding-bottom: 320px !important;
   }
 
-  #invoiceForm .primary {
-    margin-bottom: 240px !important;
+  .app-shell.form-mode #invoiceForm.page {
+    height: auto !important;
+    min-height: calc(100vh - 72px) !important;
+    overflow: visible !important;
+    padding-bottom: 340px !important;
+  }
+
+  .app-shell.form-mode #invoiceForm .primary {
+    margin-bottom: 280px !important;
   }
 }
 

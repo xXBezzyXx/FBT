@@ -69,6 +69,7 @@ async function loadAppData() {
 let selectedCustomer = '';
 let currentJobType = '';
 let invoiceCounter = 1013;
+let currentCreatedInvoiceNumber = '';
 
 let customers = [];
 
@@ -347,6 +348,7 @@ async function createInvoice() {
     invoices.unshift(saved);
     invoiceCounter++;
 
+    currentCreatedInvoiceNumber = saved.number;
     document.getElementById('createdNumber').innerText = saved.number;
     document.getElementById('createdCustomer').innerText = saved.customer;
     document.getElementById('createdTotal').innerText = money(saved.total);
@@ -425,6 +427,40 @@ function goBack() {
   else if (active === 'invoiceForm') showPage('jobType');
   else if (active === 'created') showPage('dashboard');
   else showPage('dashboard');
+}
+
+
+async function viewCreatedInvoicePdf() {
+  const invoiceNumber =
+    currentCreatedInvoiceNumber ||
+    (document.getElementById('createdNumber') ? document.getElementById('createdNumber').innerText : '');
+
+  if (!invoiceNumber) {
+    alert('No invoice selected.');
+    return;
+  }
+
+  let popup = window.open('', '_blank');
+
+  try {
+    showLoading('Creating PDF...');
+    const result = await apiRequest('generateInvoicePdf', { invoiceNumber });
+
+    if (!result || !result.pdfUrl) {
+      throw new Error('PDF URL was not returned.');
+    }
+
+    if (popup) {
+      popup.location.href = result.pdfUrl;
+    } else {
+      window.location.href = result.pdfUrl;
+    }
+  } catch (err) {
+    if (popup) popup.close();
+    alert('Could not create PDF: ' + err.message);
+  } finally {
+    hideLoading();
+  }
 }
 
 loadAppData();

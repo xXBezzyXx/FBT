@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Invoice Maker</title>
+  <style>
+    :root{--blue:#0b55e9;--pink:#e6005c;--deep:#05006d;--bg:#f7f8fb;--card:#fff;--text:#111216;--green:#b9f7c9;--shadow:0 12px 30px rgba(10,20,40,.10)}
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    body{margin:0;background:#dde2ee;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--text)}
+    .app-shell{max-width:430px;height:860px;margin:30px auto;background:linear-gradient(180deg,#fff 0%,#f8f9fc 100%);position:relative;overflow:hidden;padding-bottom:96px;border-radius:34px;box-shadow:0 30px 80px rgba(0,0,0,.18)}
+    .topbar{height:72px;padding:0 22px 14px;display:flex;align-items:flex-end;justify-content:center;position:relative}
+    .page-title{font-size:20px;font-weight:800}
+    .back-btn,.top-icon{position:absolute;bottom:10px;border:0;background:transparent;font-size:34px;color:#111}
+    .back-btn{left:18px}.top-icon{right:22px;font-size:24px;bottom:15px}.hidden{display:none!important}
+    .page{display:none;padding:18px 22px 24px;height:calc(100% - 72px);overflow-y:auto;padding-bottom:110px}.page.active{display:block}#dashboard.page{overflow-y:hidden}
+    .summary-card{border-radius:18px;padding:22px 20px;color:white;background:linear-gradient(135deg,var(--pink) 0%,var(--deep) 52%,#004cff 100%);box-shadow:0 22px 35px rgba(12,29,118,.25);display:grid;grid-template-columns:1fr 1px 1fr;gap:18px;margin-bottom:22px}
+    .summary-divider{background:rgba(255,255,255,.65)}.summary-item{min-height:72px}.summary-icon{font-size:22px;margin-bottom:7px}.summary-label{font-size:16px;opacity:.95}.summary-amount{font-size:22px;font-weight:900;margin-bottom:18px}.right{text-align:right}
+    .section-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}.section-title{font-size:22px;color:#555a63;margin:0}.small-link{border:0;background:#eef3ff;color:var(--blue);border-radius:999px;padding:8px 12px;font-weight:800;cursor:pointer}
+    .invoice-grid{display:grid;grid-template-columns:1fr 1fr;column-gap:16px;row-gap:22px}.scroll-invoices{height:405px;overflow-y:auto;padding-right:6px;padding-bottom:175px;-webkit-overflow-scrolling:touch}
+    .invoice-card{background:var(--card);border-radius:14px;padding:16px;min-height:238px;box-shadow:var(--shadow);display:flex;flex-direction:column}
+    .invoice-number{color:#8c8f99;font-size:14px;margin-bottom:9px}.invoice-date{color:#9aa0aa;font-size:12px;margin-bottom:9px}.invoice-label{font-size:14px;font-weight:700}.invoice-total{font-weight:900;font-size:21px;line-height:1.1;margin:3px 0 12px}.invoice-customer{color:#5f626a;font-size:15px;margin-bottom:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .paid-btn,.mark-btn{width:100%;border:0;border-radius:8px;padding:10px;font-size:15px;cursor:pointer;margin-top:auto}.paid-btn{background:var(--green);color:#17482a}.mark-btn{background:#eef0f4;color:#222}
+    .fab{position:absolute;left:50%;transform:translateX(-50%);bottom:52px;width:64px;height:64px;border-radius:50%;border:0;color:#fff;font-size:44px;line-height:58px;background:linear-gradient(135deg,#d30082,#003ced);box-shadow:0 12px 28px rgba(0,0,120,.35);z-index:10;cursor:pointer}
+    .bottom-nav{position:absolute;left:50%;transform:translateX(-50%);bottom:0;max-width:430px;width:100%;height:82px;background:rgba(255,255,255,.94);border-radius:26px 26px 0 0;box-shadow:0 -8px 30px rgba(0,0,0,.08);display:flex;align-items:center;justify-content:space-around;z-index:9}
+    .nav-item{border:0;background:transparent;text-align:center;font-size:12px;color:#60636b;width:95px;cursor:pointer}.nav-item span{display:block;font-size:24px;margin-bottom:4px}.nav-item.active{color:var(--blue);font-weight:800}
+    .filter-card,.detail-card,.settings-card,.empty-state{background:white;border-radius:18px;padding:18px;box-shadow:var(--shadow);margin-bottom:16px}.filter-title{font-size:18px;font-weight:900;margin-bottom:12px}.filter-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .all-list{display:flex;flex-direction:column;gap:12px}.all-invoice-row{background:white;border-radius:16px;padding:16px;box-shadow:var(--shadow)}.all-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.all-number{color:#878c98;font-size:13px;margin-bottom:5px}.all-customer{font-size:18px;font-weight:900}.all-date{color:#737985;font-size:13px;margin-top:4px}.all-total{font-size:20px;font-weight:900;text-align:right}.status-pill{display:inline-block;margin-top:8px;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:900}.status-paid{background:#d9fbe2;color:#0a7f32}.status-unpaid{background:#fff0f3;color:#c6003a}
+    .list{display:flex;flex-direction:column;gap:13px;margin-top:18px}.row-card{background:white;border:0;border-radius:12px;min-height:60px;padding:0 18px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--shadow);font-size:16px;cursor:pointer;width:100%;text-align:left}.custom-row{color:var(--blue);font-weight:700;background:#f2f6ff}.arrow{font-size:28px;color:#111}
+    .question-title{text-align:center;font-size:17px;font-weight:800;margin:44px 0 42px}.job-card{background:#fff;border:0;border-radius:16px;padding:26px 18px;min-height:118px;box-shadow:var(--shadow);display:grid;grid-template-columns:62px 1fr 20px;gap:16px;align-items:center;margin-bottom:18px;cursor:pointer;width:100%;text-align:left}.job-icon{font-size:45px;text-align:center}.job-title{font-size:20px;font-weight:900;margin-bottom:8px}.job-subtitle{color:#6d7078;font-size:14px;line-height:1.35}
+    .form-heading{font-size:18px;margin:10px 0 16px}.field{background:#fff;border:1px solid #e0e3ea;border-radius:8px;padding:8px 12px;margin-bottom:10px;box-shadow:0 3px 10px rgba(20,30,60,.03)}label{display:block;font-size:12px;color:#616772;margin-bottom:3px}input,textarea,select{width:100%;border:0;outline:0;font-size:16px;font-family:inherit;background:transparent;color:#111}textarea{min-height:62px;resize:none}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}.total-field input{font-weight:900;font-size:22px}
+    .wide{width:100%;border-radius:9px;border:0;padding:16px;font-size:16px;font-weight:800;cursor:pointer;margin-top:12px}.primary{background:#064be0;color:#fff}.gray{background:#e5e7ed;color:#222}.outline-green{background:#fff;border:1px solid #57bd75;color:#0ba33c}
+    .success-wrap{text-align:center;padding-top:42px}.success-check{width:92px;height:92px;border-radius:50%;background:linear-gradient(135deg,#20d96b,#0da044);color:white;display:flex;align-items:center;justify-content:center;font-size:58px;margin:0 auto 22px;font-weight:900}.success-wrap h1{font-size:26px;margin:0 0 8px}.success-wrap p{color:#656973;margin:0 0 28px}.detail-row{display:flex;justify-content:space-between;padding:13px 0;font-size:15px}.detail-row span{color:#6d7280}
+    .empty-state{text-align:center;color:#5f6672}.empty-state h3{margin:8px 0 6px;font-size:18px;color:#222}.empty-state p{margin:0;font-size:14px;line-height:1.4}.empty-icon{font-size:34px}.wide-empty{grid-column:1 / -1}
+    .loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.72);backdrop-filter:blur(8px);z-index:99999;display:flex;align-items:center;justify-content:center}.loading-card{background:white;padding:18px 24px;border-radius:18px;box-shadow:0 18px 50px rgba(0,0,0,.18);font-weight:900}
+    @media(max-width:520px){body{background:#f7f8fb}.app-shell{max-width:none;width:100%;height:100vh;min-height:100vh;margin:0;border-radius:0;box-shadow:none}.bottom-nav,.fab{position:fixed}.scroll-invoices{height:calc(100vh - 385px);min-height:345px;overflow-y:auto;padding-bottom:180px}}
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <button id="backBtn" class="back-btn hidden" onclick="goBack()">‹</button>
+      <div id="pageTitle" class="page-title">Invoice Maker</div>
+      <div id="topIcon" class="top-icon">⌾</div>
+    </header>
+
+    <main id="dashboard" class="page active">
+      <section class="summary-card">
+        <div>
+          <div class="summary-item"><div class="summary-icon">⚠</div><div class="summary-label">Total Unpaid</div><div id="totalUnpaid" class="summary-amount">$0.00</div></div>
+          <div class="summary-item"><div class="summary-icon">▦</div><div class="summary-label">Last 7 Days</div><div id="lastSevenTotal" class="summary-amount">$0.00</div></div>
+        </div>
+        <div class="summary-divider"></div>
+        <div>
+          <div class="summary-item right"><div class="summary-icon">💲</div><div class="summary-label">Total Paid</div><div id="totalPaid" class="summary-amount">$0.00</div></div>
+          <div class="summary-item right"><div class="summary-icon">▦</div><div class="summary-label">This Month</div><div id="thisMonthTotal" class="summary-amount">$0.00</div></div>
+        </div>
+      </section>
+      <div class="section-row"><h2 class="section-title">Recent Invoices</h2><button class="small-link" onclick="showPage('allInvoices')">View All</button></div>
+      <section id="invoiceGrid" class="invoice-grid scroll-invoices"></section>
+    </main>
+
+    <main id="allInvoices" class="page">
+      <section class="filter-card">
+        <div class="filter-title">Filter Invoices</div>
+        <div class="filter-grid">
+          <div class="field"><label>Month</label><select id="filterMonth" onchange="renderAllInvoices()"><option value="">All</option><option value="0">January</option><option value="1">February</option><option value="2">March</option><option value="3">April</option><option value="4">May</option><option value="5">June</option><option value="6">July</option><option value="7">August</option><option value="8">September</option><option value="9">October</option><option value="10">November</option><option value="11">December</option></select></div>
+          <div class="field"><label>Year</label><select id="filterYear" onchange="renderAllInvoices()"><option value="">All</option></select></div>
+        </div>
+        <div class="field"><label>Exact Date</label><input id="filterDate" type="date" onchange="renderAllInvoices()"></div>
+        <button class="wide gray" onclick="clearFilters()">Clear Filters</button>
+      </section>
+      <section id="allInvoiceList" class="all-list"></section>
+    </main>
+
+    <main id="customers" class="page"><section id="customerList" class="list"></section></main>
+
+    <main id="jobType" class="page">
+      <div class="question-title">What kind of job are you doing?</div>
+      <button class="job-card" onclick="openForm('Ship Work')"><div class="job-icon">🚢</div><div><div class="job-title">Ship Work</div><div class="job-subtitle">Repairs, labor, material, and vessel work.</div></div><div class="arrow">›</div></button>
+      <button class="job-card" onclick="openForm('Washing')"><div class="job-icon">💧</div><div><div class="job-title">Washing</div><div class="job-subtitle">Pressure washing, cleaning, and wash-down work.</div></div><div class="arrow">›</div></button>
+      <button class="wide gray" onclick="showPage('customers')">Back</button>
+    </main>
+
+    <main id="invoiceForm" class="page">
+      <h2 class="form-heading">Invoice Details</h2>
+      <div class="field"><label>Customer</label><input id="formCustomer" type="text"></div>
+      <div id="shipField" class="field hidden"><label>Vessel / Ship Name</label><input id="vesselName" type="text" placeholder="Enter vessel name"></div>
+      <div class="field"><label>Job Location</label><input id="jobLocation" type="text" placeholder="Enter location"></div>
+      <div class="field"><label>Work Performed</label><textarea id="workPerformed" placeholder="Describe the work"></textarea></div>
+      <div class="two-col"><div class="field"><label>Hours / Qty</label><input id="hours" type="number" value="1" oninput="calculateTotal()"></div><div class="field"><label>Rate</label><input id="rate" type="number" value="100" oninput="calculateTotal()"></div></div>
+      <div class="field"><label>Materials / Extra Charges</label><input id="materials" type="number" value="0" oninput="calculateTotal()"></div>
+      <div class="field total-field"><label>Total</label><input id="totalAmount" type="number" value="100"></div>
+      <div class="field"><label>Notes</label><textarea id="notes" placeholder="Optional notes"></textarea></div>
+      <button class="wide primary" onclick="createInvoice()">Create Invoice</button>
+    </main>
+
+    <main id="created" class="page">
+      <section class="success-wrap"><div class="success-check">✓</div><h1>Invoice Created!</h1><p>Your invoice has been saved to the Invoices sheet.</p></section>
+      <section class="detail-card"><div class="detail-row"><span>Invoice #</span><strong id="createdNumber">INV-1001</strong></div><div class="detail-row"><span>Customer</span><strong id="createdCustomer">Customer</strong></div><div class="detail-row"><span>Total</span><strong id="createdTotal">$0.00</strong></div><div class="detail-row"><span>Status</span><strong id="createdStatus">Unpaid</strong></div></section>
+      <button class="wide outline-green" onclick="markLastPaid()">Mark as Paid</button>
+      <button class="wide gray" onclick="showPage('dashboard')">Back to Home</button>
+    </main>
+
+    <main id="settings" class="page"><section class="settings-card"><h2>Settings</h2><p>Customers and invoices are controlled by the Google Sheet.</p></section></main>
+
+    <button id="fab" class="fab" onclick="startInvoice()">+</button>
+    <nav id="bottomNav" class="bottom-nav">
+      <button class="nav-item active" onclick="showPage('dashboard')"><span>⌂</span><small>Home</small></button>
+      <button class="nav-item" onclick="showPage('settings')"><span>⚙</span><small>Settings</small></button>
+    </nav>
+  </div>
+
+  <div id="loadingOverlay" class="loading-overlay hidden"><div class="loading-card" id="loadingText">Loading...</div></div>
+
+  <script>
+    let customers=[], invoices=[], selectedCustomer='', currentJobType='';
+
+    function money(v){return '$'+Number(v||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}
+    function formatDate(t){const d=new Date((t||'')+'T00:00:00');return isNaN(d)?(t||''):d.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})}
+    function setLoading(show,msg){document.getElementById('loadingText').innerText=msg||'Loading...';document.getElementById('loadingOverlay').classList.toggle('hidden',!show)}
+
+    function loadAppData(){
+      setLoading(true,'Loading app...');
+      google.script.run.withSuccessHandler(data=>{
+        customers=data.customers||[];
+        invoices=data.invoices||[];
+        renderInvoices();renderAllInvoices();setLoading(false);
+      }).withFailureHandler(err=>{setLoading(false);alert('Could not load app data: '+err.message)}).getAppData();
+    }
+
+    function renderInvoices(){
+      const grid=document.getElementById('invoiceGrid');
+      const cutoff=new Date();cutoff.setDate(cutoff.getDate()-14);
+      const recent=invoices.filter(inv=>new Date(inv.date+'T00:00:00')>=cutoff);
+      if(!recent.length){grid.innerHTML='<div class="empty-state wide-empty"><div class="empty-icon">🧾</div><h3>No Recent Invoices</h3><p>Invoices from the last 14 days will show here.</p></div>';updateSummary();return}
+      grid.innerHTML=recent.map(inv=>{const index=invoices.findIndex(x=>x.number===inv.number);return `<div class="invoice-card"><div class="invoice-number">#${inv.number}</div><div class="invoice-date">${formatDate(inv.date)}</div><div class="invoice-label">Total:</div><div class="invoice-total">${money(inv.total)}</div><div class="invoice-customer">${inv.customer}</div><button class="${inv.paid?'paid-btn':'mark-btn'}" onclick="togglePaid(${index})">${inv.paid?'Paid':'Mark as paid'}</button></div>`}).join('');
+      updateSummary();
+    }
+
+    function renderYearFilter(){
+      const y=document.getElementById('filterYear'); if(!y) return;
+      const sel=y.value;
+      const years=[...new Set(invoices.map(inv=>{const d=new Date(inv.date+'T00:00:00');return isNaN(d)?'':String(d.getFullYear())}).filter(Boolean))].sort((a,b)=>b.localeCompare(a));
+      y.innerHTML='<option value="">All</option>'+years.map(x=>`<option value="${x}">${x}</option>`).join('');
+      if(years.includes(sel)) y.value=sel;
+    }
+
+    function renderAllInvoices(){
+      renderYearFilter();
+      const list=document.getElementById('allInvoiceList');
+      const month=document.getElementById('filterMonth')?.value??'', year=document.getElementById('filterYear')?.value??'', exact=document.getElementById('filterDate')?.value??'';
+      const filtered=invoices.filter(inv=>{const d=new Date(inv.date+'T00:00:00'); if(exact&&inv.date!==exact)return false; if(month!==''&&d.getMonth().toString()!==month)return false; if(year!==''&&d.getFullYear().toString()!==year)return false; return true});
+      if(!filtered.length){list.innerHTML='<div class="empty-state"><div class="empty-icon">📄</div><h3>No Invoices Found</h3><p>Add invoices to the sheet or create one from the app.</p></div>';return}
+      list.innerHTML=filtered.map(inv=>`<div class="all-invoice-row"><div class="all-top"><div><div class="all-number">#${inv.number}</div><div class="all-customer">${inv.customer}</div><div class="all-date">${formatDate(inv.date)}</div><span class="status-pill ${inv.paid?'status-paid':'status-unpaid'}">${inv.paid?'Paid':'Unpaid'}</span></div><div><div class="all-total">${money(inv.total)}</div><button class="${inv.paid?'paid-btn':'mark-btn'}" onclick="togglePaidByNumber('${inv.number}')">${inv.paid?'Paid':'Mark Paid'}</button></div></div></div>`).join('');
+    }
+
+    function clearFilters(){document.getElementById('filterMonth').value='';document.getElementById('filterYear').value='';document.getElementById('filterDate').value='';renderAllInvoices()}
+
+    function updateSummary(){
+      const paid=invoices.filter(x=>x.paid).reduce((s,x)=>s+Number(x.total||0),0);
+      const unpaid=invoices.filter(x=>!x.paid).reduce((s,x)=>s+Number(x.total||0),0);
+      const today=new Date(), seven=new Date();seven.setDate(today.getDate()-7);
+      const last7=invoices.filter(x=>new Date(x.date+'T00:00:00')>=seven).reduce((s,x)=>s+Number(x.total||0),0);
+      const month=invoices.filter(x=>{const d=new Date(x.date+'T00:00:00');return d.getMonth()===today.getMonth()&&d.getFullYear()===today.getFullYear()}).reduce((s,x)=>s+Number(x.total||0),0);
+      document.getElementById('totalPaid').innerText=money(paid);document.getElementById('totalUnpaid').innerText=money(unpaid);document.getElementById('lastSevenTotal').innerText=money(last7);document.getElementById('thisMonthTotal').innerText=money(month);
+    }
+
+    function togglePaid(i){const inv=invoices[i];if(inv)togglePaidByNumber(inv.number)}
+    function togglePaidByNumber(num){
+      const inv=invoices.find(x=>x.number===num); if(!inv)return;
+      const old=inv.paid; inv.paid=!inv.paid; renderInvoices();renderAllInvoices();
+      google.script.run.withSuccessHandler(()=>loadAppData()).withFailureHandler(err=>{inv.paid=old;renderInvoices();renderAllInvoices();alert('Could not update paid status: '+err.message)}).updateInvoicePaid(num,inv.paid);
+    }
+
+    function renderCustomers(){
+      const list=document.getElementById('customerList'); let html='';
+      if(!customers.length){html+='<div class="empty-state"><div class="empty-icon">👤</div><h3>No Customers Yet</h3><p>Add customer names to the Customers sheet or use Custom / One-Off Job.</p></div>'}
+      else{html+=customers.map(n=>`<button class="row-card" onclick="selectCustomer('${String(n).replace(/'/g,"\\'")}')"><span>${n}</span><span class="arrow">›</span></button>`).join('')}
+      html+='<button class="row-card custom-row" onclick="customCustomer()"><span>＋ Custom / One-Off Job</span></button>';
+      list.innerHTML=html;
+    }
+
+    function startInvoice(){renderCustomers();showPage('customers')}
+    function selectCustomer(n){selectedCustomer=n;showPage('jobType')}
+    function customCustomer(){const n=prompt('Customer name:');if(!n)return;selectedCustomer=n;showPage('jobType')}
+
+    function openForm(type){
+      currentJobType=type;
+      document.getElementById('formCustomer').value=selectedCustomer||'Custom Customer';
+      document.getElementById('shipField').classList.toggle('hidden',type!=='Ship Work');
+      document.getElementById('vesselName').value='';document.getElementById('jobLocation').value='';document.getElementById('workPerformed').value='';document.getElementById('hours').value=1;document.getElementById('rate').value=type==='Ship Work'?150:100;document.getElementById('materials').value=0;document.getElementById('notes').value='';
+      calculateTotal();showPage('invoiceForm');
+    }
+
+    function calculateTotal(){const h=Number(document.getElementById('hours').value||0),r=Number(document.getElementById('rate').value||0),m=Number(document.getElementById('materials').value||0);document.getElementById('totalAmount').value=((h*r)+m).toFixed(2)}
+
+    function createInvoice(){
+      const inv={date:new Date().toISOString().slice(0,10),customer:document.getElementById('formCustomer').value||selectedCustomer||'Custom Customer',jobType:currentJobType,vessel:document.getElementById('vesselName').value||'',location:document.getElementById('jobLocation').value||'',workPerformed:document.getElementById('workPerformed').value||'',hours:Number(document.getElementById('hours').value||0),rate:Number(document.getElementById('rate').value||0),materials:Number(document.getElementById('materials').value||0),total:Number(document.getElementById('totalAmount').value||0),notes:document.getElementById('notes').value||''};
+      setLoading(true,'Saving invoice...');
+      google.script.run.withSuccessHandler(saved=>{setLoading(false);invoices.unshift(saved);document.getElementById('createdNumber').innerText=saved.number;document.getElementById('createdCustomer').innerText=saved.customer;document.getElementById('createdTotal').innerText=money(saved.total);document.getElementById('createdStatus').innerText=saved.paid?'Paid':'Unpaid';renderInvoices();renderAllInvoices();showPage('created')}).withFailureHandler(err=>{setLoading(false);alert('Could not save invoice: '+err.message)}).saveInvoice(inv);
+    }
+
+    function markLastPaid(){if(!invoices.length)return;togglePaidByNumber(invoices[0].number);showPage('dashboard')}
+
+    function showPage(id){
+      document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active');
+      const titles={dashboard:'Invoice Maker',allInvoices:'All Invoices',customers:'Select Customer',jobType:'Select Job Type',invoiceForm:currentJobType||'Invoice Details',created:'Invoice Created',settings:'Settings'};
+      document.getElementById('pageTitle').innerText=titles[id]||'Invoice Maker';
+      document.getElementById('backBtn').classList.toggle('hidden',id==='dashboard'||id==='settings');
+      document.getElementById('topIcon').classList.toggle('hidden',id!=='dashboard');
+      document.getElementById('fab').style.display=id==='dashboard'?'block':'none';
+      document.getElementById('bottomNav').style.display=(id==='dashboard'||id==='settings')?'flex':'none';
+      document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+      if(id==='settings')document.querySelectorAll('.nav-item')[1].classList.add('active');else document.querySelectorAll('.nav-item')[0].classList.add('active');
+      if(id==='allInvoices')renderAllInvoices();
+    }
+
+    function goBack(){const a=document.querySelector('.page.active').id;if(a==='allInvoices')showPage('dashboard');else if(a==='customers')showPage('dashboard');else if(a==='jobType')showPage('customers');else if(a==='invoiceForm')showPage('jobType');else if(a==='created')showPage('dashboard');else showPage('dashboard')}
+
+    loadAppData();
+  </script>
+</body>
+</html>

@@ -7,6 +7,28 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+
+  <div id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <div class="login-logo">⌾</div>
+      <h1>Invoice Maker</h1>
+      <p>Sign in to continue</p>
+
+      <div class="field login-field">
+        <label>Username</label>
+        <input id="loginUser" type="text" placeholder="Username" autocomplete="username">
+      </div>
+
+      <div class="field login-field">
+        <label>Password</label>
+        <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password">
+      </div>
+
+      <button class="wide primary" onclick="loginApp()">Login</button>
+      <div id="loginError" class="login-error hidden">Wrong username or password.</div>
+    </div>
+  </div>
+
   <div class="app-shell">
     <header class="topbar">
       <button id="backBtn" class="back-btn hidden" onclick="goBack()">‹</button>
@@ -212,6 +234,7 @@
 
         <button class="wide primary" onclick="saveSettings()">Save Settings</button>
         <button class="wide gray" onclick="loadSettings()">Reload Settings</button>
+        <button class="wide outline" onclick="logoutApp()">Log Out</button>
       </section>
     </main>
 

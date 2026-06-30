@@ -1,4 +1,53 @@
 
+const LOGIN_USERNAME = 'Margaret';
+const LOGIN_PASSWORD = 'Cahoon11';
+
+function isLoggedIn() {
+  return localStorage.getItem('invoiceMakerLoggedIn') === 'true';
+}
+
+function showLoginIfNeeded() {
+  const loginScreen = document.getElementById('loginScreen');
+
+  if (!isLoggedIn()) {
+    if (loginScreen) loginScreen.classList.remove('hidden');
+    document.body.classList.add('locked');
+    return true;
+  }
+
+  if (loginScreen) loginScreen.classList.add('hidden');
+  document.body.classList.remove('locked');
+  return false;
+}
+
+function loginApp() {
+  const user = document.getElementById('loginUser').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  const error = document.getElementById('loginError');
+
+  if (user === LOGIN_USERNAME && pass === LOGIN_PASSWORD) {
+    localStorage.setItem('invoiceMakerLoggedIn', 'true');
+    if (error) error.classList.add('hidden');
+    showLoginIfNeeded();
+    loadAppData();
+  } else {
+    if (error) error.classList.remove('hidden');
+  }
+}
+
+function logoutApp() {
+  localStorage.removeItem('invoiceMakerLoggedIn');
+  showLoginIfNeeded();
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !isLoggedIn()) {
+    loginApp();
+  }
+});
+
+
+
 async function apiRequest(action, payload = {}) {
   if (!window.GOOGLE_SCRIPT_URL || !window.GOOGLE_SCRIPT_URL.includes('/exec')) {
     throw new Error('Missing GOOGLE_SCRIPT_URL in config.js');
@@ -522,4 +571,5 @@ async function sendCreatedInvoiceEmail() {
   }
 }
 
-loadAppData();
+showLoginIfNeeded();
+if (isLoggedIn()) loadAppData();

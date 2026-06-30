@@ -697,3 +697,69 @@ textarea { min-height: 62px; resize: none; }
     margin-bottom: 220px !important;
   }
 }
+
+
+/* Login Page */
+.login-screen {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, var(--pink) 0%, var(--deep) 52%, #004cff 100%);
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 390px;
+  background: white;
+  border-radius: 28px;
+  padding: 32px 24px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.28);
+  text-align: center;
+}
+
+.login-logo {
+  width: 72px;
+  height: 72px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #d30082, #003ced);
+  color: white;
+  font-size: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 18px;
+  box-shadow: 0 14px 32px rgba(0, 0, 120, 0.25);
+}
+
+.login-card h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 900;
+}
+
+.login-card p {
+  margin: 8px 0 22px;
+  color: #6d7280;
+}
+
+.login-field {
+  text-align: left;
+  margin-bottom: 12px;
+}
+
+.login-error {
+  margin-top: 14px;
+  color: #c6003a;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+body.locked .app-shell {
+  filter: blur(2px);
+  pointer-events: none;
+  user-select: none;
+}

@@ -438,6 +438,31 @@ function getSelectedCustomerDetail() {
 }
 
 
+
+function equipmentSelected() {
+  const select = document.getElementById('referenceNumber');
+  if (!select) return;
+
+  const name = select.value;
+  const detail = (equipmentDetails && equipmentDetails[name]) || {};
+
+  if (detail.hours || detail.rate) {
+    const firstQty = document.querySelector('.item-qty');
+    const firstRate = document.querySelector('.item-rate');
+    const firstAmount = document.querySelector('.item-amount');
+
+    if (firstQty && detail.hours) firstQty.value = detail.hours;
+    if (firstRate && detail.rate) firstRate.value = detail.rate;
+    if (firstAmount && detail.hours && detail.rate) {
+      firstAmount.value = Number(detail.hours || 0) * Number(detail.rate || 0);
+    }
+
+    if (typeof calculateTotals === 'function') calculateTotals();
+  }
+
+  if (typeof updatePreview === 'function') updatePreview();
+}
+
 function renderEquipmentOptions() {
   const select = document.getElementById('referenceNumber');
   if (!select) return;

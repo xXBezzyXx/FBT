@@ -38,7 +38,7 @@ function doPost(e) {
     } else if (action === 'sendInvoiceEmail') {
       data = sendInvoiceEmail(payload.invoiceNumber);
     } else if (action === 'saveEquipment') {
-      data = saveEquipment(payload.equipment);
+      data = saveEquipment(payload);
     } else {
       throw new Error('Unknown action: ' + action);
     }
@@ -75,10 +75,7 @@ function setupSheets() {
   let customers = ss.getSheetByName(SHEET_CUSTOMERS);
   if (!customers) customers = ss.insertSheet(SHEET_CUSTOMERS);
   if (customers.getLastRow() === 0) {
-    customers.getRange(1, 1, 1, 9).setValues([[
-      'Customer Name', 'Email', 'Phone', 'Billing Company', 'Billing Contact Name',
-      'Billing Address', 'Billing City', 'Billing State', 'Billing Zip'
-    ]]);
+    customers.getRange(1, 1, 1, 9).setValues([['Customer Name', 'Billing Company', 'Contact Name', 'Email', 'Phone', 'Billing Address', 'City', 'State', 'Zip']]);
   }
 
   let invoices = ss.getSheetByName(SHEET_INVOICES);
@@ -111,13 +108,13 @@ function setupSheets() {
   let equipment = ss.getSheetByName(SHEET_EQUIPMENT);
   if (!equipment) equipment = ss.insertSheet(SHEET_EQUIPMENT);
   if (equipment.getLastRow() === 0) {
-    equipment.getRange(1, 1, 1, 2).setValues([['Equipment / Reference', 'Notes']]);
+    equipment.getRange(1, 1, 1, 4).setValues([['Equipment Name', 'Hours', 'Rate', 'Notes']]);
   }
 
   customers.autoResizeColumns(1, 9);
   invoices.autoResizeColumns(1, 24);
   settings.autoResizeColumns(1, 2);
-  equipment.autoResizeColumns(1, 2);
+  equipment.autoResizeColumns(1, 4);
 }
 
 function getAppData() {
@@ -126,6 +123,7 @@ function getAppData() {
     customers: getCustomers(),
     customerDetails: getCustomerDetails(),
     equipment: getEquipment(),
+    equipmentDetails: getEquipmentDetails(),
     invoices: getInvoices(),
     nextInvoiceNumber: getNextInvoiceNumber_(),
     settings: getSettings()
@@ -143,6 +141,10 @@ function getCustomers() {
 }
 
 
+
+
+
+
 function getCustomerDetails() {
   const sheet = getSpreadsheet_().getSheetByName(SHEET_CUSTOMERS);
   const lastRow = sheet.getLastRow();
@@ -157,11 +159,11 @@ function getCustomerDetails() {
 
     details[customerName] = {
       customerName: customerName,
-      email: String(r[1] || '').trim(),
-      phone: String(r[2] || '').trim(),
-      billingCompany: String(r[3] || customerName).trim(),
-      billingName: String(r[4] || customerName).trim(),
-      billingContactName: String(r[4] || customerName).trim(),
+      billingCompany: String(r[1] || customerName).trim(),
+      contactName: String(r[2] || '').trim(),
+      billingContactName: String(r[2] || '').trim(),
+      email: String(r[3] || '').trim(),
+      phone: String(r[4] || '').trim(),
       billingAddress: String(r[5] || '').trim(),
       billingCity: String(r[6] || '').trim(),
       billingState: String(r[7] || '').trim(),
@@ -172,32 +174,66 @@ function getCustomerDetails() {
   return details;
 }
 
-function getEquipment() {
-  const sheet = getSpreadsheet_().getSheetByName(SHEET_EQUIPMENT);
-  const lastRow = sheet.getLastRow();
-  if (lastRow < 2) return [];
 
-  return sheet.getRange(2, 1, lastRow - 1, 1)
-    .getValues()
-    .flat()
-    .map(v => String(v || '').trim())
-    .filter(Boolean);
+
+
+
+
+
+
+
+
+function getEquipment() {
+  const details = getEquipmentDetails();
+  return Object.keys(details);
 }
 
-function saveEquipment(equipment) {
+function getEquipmentDetails() {
+  const sheet = getSpreadsheet_().getSheetByName(SHEET_EQUIPMENT);
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return {};
+
+  const values = sheet.getRange(2, 1, lastRow - 1, Math.max(sheet.getLastColumn(), 4)).getValues();
+  const details = {};
+
+  values.forEach(r => {
+    const name = String(r[0] || '').trim();
+    if (!name) return;
+
+    details[name] = {
+      equipmentName: name,
+      hours: Number(r[1] || 0),
+      rate: Number(r[2] || 0),
+      notes: String(r[3] || '').trim()
+    };
+  });
+
+  return details;
+}
+
+function saveEquipment(payload) {
   setupSheets();
 
-  const value = String(equipment || '').trim();
-  if (!value) throw new Error('Equipment / Reference is blank.');
+  const equipmentName = String(
+    (payload && payload.equipmentName) ||
+    (payload && payload.equipment) ||
+    payload ||
+    ''
+  ).trim();
+
+  if (!equipmentName) throw new Error('Equipment Name is blank.');
+
+  const hours = Number((payload && payload.hours) || 0);
+  const rate = Number((payload && payload.rate) || 0);
 
   const sheet = getSpreadsheet_().getSheetByName(SHEET_EQUIPMENT);
   const existing = getEquipment().map(v => v.toLowerCase());
 
-  if (!existing.includes(value.toLowerCase())) {
-    sheet.appendRow([value, '']);
+  if (!existing.includes(equipmentName.toLowerCase())) {
+    sheet.appendRow([equipmentName, hours || '', rate || '', '']);
   }
 
-  return { equipment: value };
+  return { equipmentName, hours, rate };
 }
 
 function getInvoices() {

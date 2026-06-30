@@ -215,6 +215,7 @@ async function loadAppData() {
     customers = data.customers || [];
     customerDetails = data.customerDetails || {};
     equipmentList = data.equipment || [];
+    equipmentDetails = data.equipmentDetails || {};
     renderEquipmentOptions();
     invoices = data.invoices || [];
     invoiceCounter = data.nextInvoiceNumber || invoiceCounter;
@@ -244,6 +245,7 @@ appSettings = window.appSettings || { invoiceEmail: '' };
 let customers = [];
 let customerDetails = {};
 let equipmentList = [];
+let equipmentDetails = {};
 
 let invoices = [];
 
@@ -417,6 +419,14 @@ async function togglePaidFromAll(invoiceNumber) {
 }
 
 
+
+
+
+function escapeAttr(value) {
+  return String(value || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+
 function renderEquipmentOptions() {
   const list = document.getElementById('equipmentOptions');
   if (!list) return;
@@ -426,18 +436,71 @@ function renderEquipmentOptions() {
     .join('');
 }
 
-async function addNewEquipment() {
+function addNewEquipment() {
   const current = document.getElementById('referenceNumber') ? document.getElementById('referenceNumber').value.trim() : '';
-  const equipment = prompt('Enter new equipment / reference:', current);
+  const modal = document.getElementById('equipmentModal');
 
-  if (!equipment) return;
+  document.getElementById('equipName').value = current;
+  document.getElementById('equipMake').value = '';
+  document.getElementById('equipModel').value = '';
+  document.getElementById('equipSerial').value = '';
+  document.getElementById('equipCustomer').value = selectedCustomer || '';
+  document.getElementById('equipNotes').value = '';
+
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeEquipmentModal() {
+  const modal = document.getElementById('equipmentModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function formatEquipmentReference(equipment) {
+  const name = equipment.equipmentName || equipment.name || '';
+  const make = equipment.make || '';
+  const model = equipment.model || '';
+  const serial = equipment.serialNumber || equipment.serial || '';
+
+  let line = name;
+
+  const detailParts = [];
+  if (make) detailParts.push(make);
+  if (model) detailParts.push(model);
+
+  if (detailParts.length) line += ' - ' + detailParts.join(' ');
+  if (serial) line += ' SN: ' + serial;
+
+  return line.trim();
+}
+
+async function saveNewEquipmentFromModal() {
+  const equipment = {
+    equipmentName: document.getElementById('equipName').value.trim(),
+    make: document.getElementById('equipMake').value.trim(),
+    model: document.getElementById('equipModel').value.trim(),
+    serialNumber: document.getElementById('equipSerial').value.trim(),
+    customer: document.getElementById('equipCustomer').value.trim(),
+    notes: document.getElementById('equipNotes').value.trim()
+  };
+
+  if (!equipment.equipmentName) {
+    alert('Equipment Name is required.');
+    return;
+  }
 
   try {
     showLoading('Saving equipment...');
-    await apiRequest('saveEquipment', { equipment });
-    if (!equipmentList.includes(equipment)) equipmentList.push(equipment);
+    const saved = await apiRequest('saveEquipment', equipment);
+    const ref = formatEquipmentReference(saved);
+
+    if (!equipmentList.includes(ref)) equipmentList.push(ref);
+    equipmentDetails[ref] = saved;
+
     renderEquipmentOptions();
-    document.getElementById('referenceNumber').value = equipment;
+    document.getElementById('referenceNumber').value = ref;
+
+    closeEquipmentModal();
+
     if (typeof updatePreview === 'function') updatePreview();
   } catch (err) {
     alert('Could not save equipment: ' + err.message);
@@ -449,10 +512,6 @@ async function addNewEquipment() {
 function getSelectedCustomerDetail() {
   const name = selectedCustomer || '';
   return customerDetails[name] || {};
-}
-
-function escapeAttr(value) {
-  return String(value || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 function renderCustomers() {
@@ -510,7 +569,7 @@ function openForm(type) {
 
   document.getElementById('formCustomer').value = selectedCustomer || 'Custom Customer';
   document.getElementById('billingCompany').value = selectedDetail.billingCompany || selectedCustomer || '';
-  document.getElementById('billingName').value = selectedDetail.billingName || selectedDetail.billingContactName || selectedCustomer || '';
+  document.getElementById('billingName').value = selectedDetail.contactName || selectedDetail.billingContactName || '';
   document.getElementById('billingAddress').value = selectedDetail.billingAddress || '';
   document.getElementById('billingCity').value = selectedDetail.billingCity || '';
   document.getElementById('billingState').value = selectedDetail.billingState || '';

@@ -441,27 +441,56 @@ function getSelectedCustomerDetail() {
 
 
 
+
+
 function equipmentSelected() {
   const select = document.getElementById('referenceNumber');
   if (!select) return;
 
-  const name = select.value;
-  const detail = (equipmentDetails && equipmentDetails[name]) || {};
+  const equipmentName = select.value || '';
+  const detail = (equipmentDetails && equipmentDetails[equipmentName]) || {};
 
-  if (detail.hours || detail.rate) {
-    const firstQty = document.querySelector('.item-qty');
-    const firstRate = document.querySelector('.item-rate');
-    const firstAmount = document.querySelector('.item-amount');
+  const hours = Number(detail.hours || detail.defaultHours || 0);
+  const rate = Number(detail.rate || detail.defaultRate || 0);
 
-    if (firstQty && detail.hours) firstQty.value = detail.hours;
-    if (firstRate && detail.rate) firstRate.value = detail.rate;
-    if (firstAmount && detail.hours && detail.rate) {
-      firstAmount.value = Number(detail.hours || 0) * Number(detail.rate || 0);
-    }
+  // Newer item-row layout
+  const firstQty = document.querySelector('.item-qty');
+  const firstRate = document.querySelector('.item-rate');
+  const firstAmount = document.querySelector('.item-amount');
+  const firstDesc = document.querySelector('.item-desc');
+
+  if (firstQty || firstRate || firstAmount) {
+    if (firstQty && hours) firstQty.value = hours;
+    if (firstRate && rate) firstRate.value = rate;
+    if (firstAmount && hours && rate) firstAmount.value = (hours * rate).toFixed(2);
+    if (firstDesc && equipmentName && !firstDesc.value) firstDesc.value = equipmentName;
 
     if (typeof calculateTotals === 'function') calculateTotals();
+    if (typeof updatePreview === 'function') updatePreview();
+    return;
   }
 
+  // Original simple form layout
+  const hoursInput = document.getElementById('hours');
+  const rateInput = document.getElementById('rate');
+  const totalInput = document.getElementById('totalAmount');
+  const workInput = document.getElementById('workPerformed');
+
+  if (hoursInput && hours) hoursInput.value = hours;
+  if (rateInput && rate) rateInput.value = rate;
+
+  if (totalInput && hours && rate) {
+    const materialsInput = document.getElementById('materials');
+    const materials = materialsInput ? Number(materialsInput.value || 0) : 0;
+    totalInput.value = ((hours * rate) + materials).toFixed(2);
+  }
+
+  if (workInput && equipmentName && !workInput.value) {
+    workInput.value = equipmentName;
+  }
+
+  if (typeof calculateTotal === 'function') calculateTotal();
+  if (typeof calculateTotals === 'function') calculateTotals();
   if (typeof updatePreview === 'function') updatePreview();
 }
 

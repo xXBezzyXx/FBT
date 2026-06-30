@@ -1,3 +1,18 @@
+// Guaranteed global Settings helper
+var appSettings = window.appSettings || { invoiceEmail: '' };
+
+window.fillSettingsForm = function fillSettingsForm() {
+  var emailInput = document.getElementById('settingInvoiceEmail');
+  if (emailInput) {
+    var settings = window.appSettings || appSettings || { invoiceEmail: '' };
+    emailInput.value = settings.invoiceEmail || '';
+  }
+};
+
+function fillSettingsForm() {
+  return window.fillSettingsForm();
+}
+
 
 const LOGIN_USERNAME = 'Margaret';
 const LOGIN_PASSWORD = 'Cahoon11';
@@ -100,18 +115,13 @@ function hideLoading() {
 }
 
 
-function fillSettingsForm() {
-  const emailInput = document.getElementById('settingInvoiceEmail');
-  if (emailInput) {
-    emailInput.value = (window.appSettings && window.appSettings.invoiceEmail) || appSettings?.invoiceEmail || '';
-  }
-}
 
 async function loadSettings() {
   try {
     showLoading('Loading settings...');
     const data = await apiRequest('getSettings');
     appSettings = data || { invoiceEmail: '' };
+    window.appSettings = appSettings;
     window.appSettings = appSettings;
     fillSettingsForm();
   } catch (err) {
@@ -128,6 +138,7 @@ async function saveSettings() {
   try {
     showLoading('Saving settings...');
     appSettings = await apiRequest('saveSettings', { invoiceEmail });
+    window.appSettings = appSettings;
     window.appSettings = appSettings;
     fillSettingsForm();
     alert('Settings saved.');
@@ -206,6 +217,7 @@ async function loadAppData() {
     invoiceCounter = data.nextInvoiceNumber || invoiceCounter;
     appSettings = data.settings || { invoiceEmail: '' };
     window.appSettings = appSettings;
+    window.appSettings = appSettings;
     fillSettingsForm();
 
     renderInvoices();
@@ -224,7 +236,7 @@ let selectedCustomer = '';
 let currentJobType = '';
 let invoiceCounter = 1013;
 let currentCreatedInvoiceNumber = '';
-let appSettings = { invoiceEmail: '' };
+appSettings = window.appSettings || { invoiceEmail: '' };
 
 let customers = [];
 

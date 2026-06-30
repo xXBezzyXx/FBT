@@ -799,3 +799,57 @@ body.locked .app-shell {
 
 /* Multi job / machine invoice fields */
 .job-block{background:#fff;border-radius:16px;box-shadow:var(--shadow);border:1px solid #e6e9f0;margin-bottom:18px;overflow:hidden}.job-block-head{background:linear-gradient(135deg,#064be0,#00389e);color:#fff;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;font-weight:900}.job-remove-btn{border:0;background:rgba(255,255,255,.18);color:#fff;border-radius:8px;padding:7px 10px;font-weight:900;cursor:pointer}.job-block-body{padding:12px 0 14px}.job-total-pill{margin:4px 14px 10px;background:#eef3ff;color:#064be0;border-radius:10px;padding:10px 12px;font-weight:900;display:flex;justify-content:space-between}.job-help{margin:0 14px 10px;color:#6d7280;font-size:13px;line-height:1.35}#jobsList{padding-bottom:4px}#invoiceForm textarea.job-description{min-height:72px!important}.section-mini-title{font-size:14px;font-weight:900;color:#0b55e9;margin:14px 0 8px}.three-col{display:grid;grid-template-columns:1.2fr .8fr 1fr;gap:8px}#invoiceForm.page{overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch!important;padding-bottom:420px!important}#customerList{padding-bottom:220px!important}#customers.page{overflow-y:auto!important;padding-bottom:260px!important}@media(max-width:520px){#invoiceForm.page{height:calc(100vh - 72px)!important;max-height:calc(100vh - 72px)!important;padding-bottom:460px!important}.three-col{grid-template-columns:1fr .7fr .9fr}}
+
+
+/* Dynamic Job Type list from JobTypes sheet */
+.job-type-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 30px;
+}
+
+.job-type-card {
+  background: #fff;
+  border: 0;
+  border-radius: 16px;
+  padding: 24px 18px;
+  min-height: 110px;
+  box-shadow: var(--shadow);
+  display: grid;
+  grid-template-columns: 58px 1fr 22px;
+  gap: 16px;
+  align-items: center;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+}
+
+.job-type-card .job-icon {
+  font-size: 42px;
+  text-align: center;
+}
+
+.job-type-card .job-title {
+  font-size: 20px;
+  font-weight: 900;
+  margin-bottom: 6px;
+}
+
+.job-type-card .job-subtitle {
+  color: #6d7078;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+#jobType.page {
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  padding-bottom: 220px !important;
+}
+
+
+/* Removed Select Job Type page: customer selection now opens invoice form directly */
+#jobType {
+  display: none !important;
+}

@@ -511,8 +511,7 @@ function startInvoice() {
 
 function selectCustomer(name) {
   selectedCustomer = name;
-  renderJobTypes();
-  showPage('jobType');
+  openForm('Repair');
 }
 
 function customCustomer() {
@@ -520,12 +519,11 @@ function customCustomer() {
   if (!name) return;
 
   selectedCustomer = name;
-  renderJobTypes();
-  showPage('jobType');
+  openForm('Repair');
 }
 
 function openForm(type) {
-  currentJobType = type;
+  currentJobType = type || 'Repair';
 
   document.getElementById('formCustomer').value = selectedCustomer || 'Custom Customer';
   document.getElementById('billingCompany').value = selectedCustomer || '';
@@ -640,7 +638,7 @@ function showPage(pageId) {
     dashboard: 'Invoice Maker',
     allInvoices: 'All Invoices',
     customers: 'Select Customer',
-    jobType: 'Select Job Type',
+    
     invoiceForm: currentJobType || 'Invoice Details',
     created: 'Invoice Created',
     settings: 'Settings'
@@ -671,7 +669,7 @@ function goBack() {
 
   if (active === 'customers') showPage('dashboard');
   else if (active === 'jobType') showPage('customers');
-  else if (active === 'invoiceForm') showPage('jobType');
+  else if (active === 'invoiceForm') openForm('Repair');
   else if (active === 'created') showPage('dashboard');
   else showPage('dashboard');
 }

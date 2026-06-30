@@ -597,3 +597,103 @@ textarea { min-height: 62px; resize: none; }
   color: #fff;
   font-weight: 800;
 }
+
+
+/* =========================================================
+   FINAL SCROLL FIX
+   Restores scrolling after PDF button update.
+   ========================================================= */
+
+/* Keep dashboard locked so only Recent Invoices scrolls */
+#dashboard.page {
+  overflow-y: hidden !important;
+}
+
+/* These pages need to scroll normally */
+#customers.page,
+#invoiceForm.page,
+#created.page,
+#allInvoices.page,
+#settings.page {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  padding-bottom: 220px !important;
+}
+
+/* Customer list can get long */
+#customers.page {
+  height: calc(100% - 72px) !important;
+}
+
+#customerList {
+  padding-bottom: 180px !important;
+}
+
+/* Invoice Details / Washing / Ship Work form */
+#invoiceForm.page {
+  height: calc(100% - 72px) !important;
+  max-height: calc(100% - 72px) !important;
+  padding-bottom: 320px !important;
+}
+
+#invoiceForm .wide.primary {
+  margin-bottom: 220px !important;
+  min-height: 58px !important;
+}
+
+/* Created invoice buttons need room too */
+#created.page {
+  padding-bottom: 260px !important;
+}
+
+#created .wide:last-child {
+  margin-bottom: 160px !important;
+}
+
+/* View All invoices */
+#allInvoices.page {
+  padding-bottom: 220px !important;
+}
+
+#allInvoiceList {
+  padding-bottom: 160px !important;
+}
+
+@media (max-width: 520px) {
+  #customers.page,
+  #invoiceForm.page,
+  #created.page,
+  #allInvoices.page,
+  #settings.page {
+    height: calc(100vh - 72px) !important;
+    max-height: calc(100vh - 72px) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  #customers.page {
+    padding-bottom: 240px !important;
+  }
+
+  #customerList {
+    padding-bottom: 220px !important;
+  }
+
+  #invoiceForm.page {
+    padding-bottom: 380px !important;
+  }
+
+  #invoiceForm .wide.primary {
+    margin-bottom: 280px !important;
+  }
+
+  #created.page {
+    padding-bottom: 300px !important;
+  }
+
+  #created .wide:last-child {
+    margin-bottom: 220px !important;
+  }
+}

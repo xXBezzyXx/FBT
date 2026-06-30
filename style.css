@@ -575,131 +575,65 @@ textarea { min-height: 62px; resize: none; }
 }
 
 
-/* PDF buttons and clickable invoices */
-.clickable-invoice {
-  cursor: pointer;
-  transition: transform 0.12s ease;
+/* Added invoice PDF fields */
+.section-mini-title {
+  font-size: 14px;
+  font-weight: 900;
+  color: #0b55e9;
+  margin: 14px 0 8px;
 }
 
-.clickable-invoice:active {
-  transform: scale(0.98);
+.three-col {
+  display: grid;
+  grid-template-columns: 1.2fr .8fr 1fr;
+  gap: 8px;
 }
 
-.pdf-btn {
-  width: 100%;
-  border: 0;
-  border-radius: 8px;
-  padding: 10px;
-  font-size: 15px;
-  cursor: pointer;
-  margin-top: 10px;
-  background: #064be0;
-  color: #fff;
-  font-weight: 800;
+/* Scroll fix from working baseline */
+#invoiceForm.page {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  padding-bottom: 260px !important;
 }
 
-
-/* =========================================================
-   FINAL SCROLL FIX
-   Restores scrolling after PDF button update.
-   ========================================================= */
-
-/* Keep dashboard locked so only Recent Invoices scrolls */
-#dashboard.page {
-  overflow-y: hidden !important;
+#invoiceForm .wide.primary {
+  margin-bottom: 180px !important;
+  min-height: 58px !important;
 }
 
-/* These pages need to scroll normally */
 #customers.page,
-#invoiceForm.page,
+#jobType.page,
 #created.page,
 #allInvoices.page,
 #settings.page {
   overflow-y: auto !important;
   overflow-x: hidden !important;
   -webkit-overflow-scrolling: touch !important;
-  padding-bottom: 220px !important;
 }
 
-/* Customer list can get long */
-#customers.page {
-  height: calc(100% - 72px) !important;
-}
-
-#customerList {
-  padding-bottom: 180px !important;
-}
-
-/* Invoice Details / Washing / Ship Work form */
-#invoiceForm.page {
-  height: calc(100% - 72px) !important;
-  max-height: calc(100% - 72px) !important;
-  padding-bottom: 320px !important;
-}
-
-#invoiceForm .wide.primary {
-  margin-bottom: 220px !important;
-  min-height: 58px !important;
-}
-
-/* Created invoice buttons need room too */
-#created.page {
-  padding-bottom: 260px !important;
-}
-
-#created .wide:last-child {
-  margin-bottom: 160px !important;
-}
-
-/* View All invoices */
-#allInvoices.page {
-  padding-bottom: 220px !important;
-}
-
-#allInvoiceList {
-  padding-bottom: 160px !important;
+#dashboard.page {
+  overflow-y: hidden !important;
 }
 
 @media (max-width: 520px) {
-  #customers.page,
-  #invoiceForm.page,
-  #created.page,
-  #allInvoices.page,
-  #settings.page {
+  #invoiceForm.page {
     height: calc(100vh - 72px) !important;
     max-height: calc(100vh - 72px) !important;
     overflow-y: auto !important;
-    overflow-x: hidden !important;
-    -webkit-overflow-scrolling: touch !important;
-  }
-
-  #customers.page {
-    padding-bottom: 240px !important;
-  }
-
-  #customerList {
-    padding-bottom: 220px !important;
-  }
-
-  #invoiceForm.page {
-    padding-bottom: 380px !important;
+    padding-bottom: 320px !important;
   }
 
   #invoiceForm .wide.primary {
-    margin-bottom: 280px !important;
-  }
-
-  #created.page {
-    padding-bottom: 300px !important;
-  }
-
-  #created .wide:last-child {
-    margin-bottom: 220px !important;
+    margin-bottom: 240px !important;
   }
 }
 
 
-/* Login Page */
+/* =========================================================
+   FINAL LOGIN + SCROLL + PDF BUTTON STYLES
+   ========================================================= */
+
 .login-screen {
   position: fixed;
   inset: 0;
@@ -762,4 +696,102 @@ body.locked .app-shell {
   filter: blur(2px);
   pointer-events: none;
   user-select: none;
+}
+
+#dashboard.page {
+  overflow-y: hidden !important;
+}
+
+#customers.page,
+#invoiceForm.page,
+#created.page,
+#allInvoices.page,
+#settings.page {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  padding-bottom: 240px !important;
+}
+
+#customerList {
+  padding-bottom: 220px !important;
+}
+
+#invoiceForm.page {
+  height: calc(100% - 72px) !important;
+  max-height: calc(100% - 72px) !important;
+  padding-bottom: 360px !important;
+}
+
+#invoiceForm .wide.primary {
+  margin-bottom: 260px !important;
+  min-height: 58px !important;
+}
+
+#created.page {
+  padding-bottom: 320px !important;
+}
+
+#created .wide:last-child {
+  margin-bottom: 220px !important;
+}
+
+#allInvoices.page {
+  padding-bottom: 260px !important;
+}
+
+#allInvoiceList {
+  padding-bottom: 200px !important;
+}
+
+.clickable-invoice {
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+
+.clickable-invoice:active {
+  transform: scale(0.98);
+}
+
+.pdf-btn {
+  width: 100%;
+  border: 0;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 15px;
+  cursor: pointer;
+  margin-top: 10px;
+  background: #064be0;
+  color: #fff;
+  font-weight: 800;
+}
+
+@media (max-width: 520px) {
+  #customers.page,
+  #invoiceForm.page,
+  #created.page,
+  #allInvoices.page,
+  #settings.page {
+    height: calc(100vh - 72px) !important;
+    max-height: calc(100vh - 72px) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  #customers.page {
+    padding-bottom: 260px !important;
+  }
+
+  #invoiceForm.page {
+    padding-bottom: 420px !important;
+  }
+
+  #invoiceForm .wide.primary {
+    margin-bottom: 320px !important;
+  }
+
+  #created.page {
+    padding-bottom: 340px !important;
+  }
 }

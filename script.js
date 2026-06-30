@@ -544,6 +544,7 @@ function openForm(type) {
 
   calculateTotal();
   showPage('invoiceForm');
+  document.getElementById('pageTitle').innerText = 'Invoice Maker';
 }
 
 function calculateTotal() {
@@ -639,7 +640,7 @@ function showPage(pageId) {
     allInvoices: 'All Invoices',
     customers: 'Select Customer',
     
-    invoiceForm: currentJobType || 'Invoice Details',
+    invoiceForm: 'Invoice Maker',
     created: 'Invoice Created',
     settings: 'Settings'
   };

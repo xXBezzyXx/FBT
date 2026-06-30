@@ -795,3 +795,24 @@ body.locked .app-shell {
     padding-bottom: 340px !important;
   }
 }
+
+
+/* Equipment add-new row */
+.inline-input-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.inline-add-btn {
+  border: 0;
+  background: #064be0;
+  color: #fff;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}

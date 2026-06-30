@@ -213,6 +213,9 @@ async function loadAppData() {
     const data = await apiRequest('getAppData');
 
     customers = data.customers || [];
+    customerDetails = data.customerDetails || {};
+    equipmentList = data.equipment || [];
+    renderEquipmentOptions();
     invoices = data.invoices || [];
     invoiceCounter = data.nextInvoiceNumber || invoiceCounter;
     appSettings = data.settings || { invoiceEmail: '' };
@@ -239,6 +242,8 @@ let currentCreatedInvoiceNumber = '';
 appSettings = window.appSettings || { invoiceEmail: '' };
 
 let customers = [];
+let customerDetails = {};
+let equipmentList = [];
 
 let invoices = [];
 
@@ -411,6 +416,45 @@ async function togglePaidFromAll(invoiceNumber) {
   }
 }
 
+
+function renderEquipmentOptions() {
+  const list = document.getElementById('equipmentOptions');
+  if (!list) return;
+
+  list.innerHTML = (equipmentList || [])
+    .map(item => `<option value="${escapeAttr(item)}"></option>`)
+    .join('');
+}
+
+async function addNewEquipment() {
+  const current = document.getElementById('referenceNumber') ? document.getElementById('referenceNumber').value.trim() : '';
+  const equipment = prompt('Enter new equipment / reference:', current);
+
+  if (!equipment) return;
+
+  try {
+    showLoading('Saving equipment...');
+    await apiRequest('saveEquipment', { equipment });
+    if (!equipmentList.includes(equipment)) equipmentList.push(equipment);
+    renderEquipmentOptions();
+    document.getElementById('referenceNumber').value = equipment;
+    if (typeof updatePreview === 'function') updatePreview();
+  } catch (err) {
+    alert('Could not save equipment: ' + err.message);
+  } finally {
+    hideLoading();
+  }
+}
+
+function getSelectedCustomerDetail() {
+  const name = selectedCustomer || '';
+  return customerDetails[name] || {};
+}
+
+function escapeAttr(value) {
+  return String(value || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 function renderCustomers() {
   const customerList = document.getElementById('customerList');
 
@@ -462,14 +506,15 @@ function customCustomer() {
 
 function openForm(type) {
   currentJobType = type;
+  const selectedDetail = getSelectedCustomerDetail();
 
   document.getElementById('formCustomer').value = selectedCustomer || 'Custom Customer';
-  document.getElementById('billingCompany').value = selectedCustomer || '';
-  document.getElementById('billingName').value = '';
-  document.getElementById('billingAddress').value = '';
-  document.getElementById('billingCity').value = '';
-  document.getElementById('billingState').value = '';
-  document.getElementById('billingZip').value = '';
+  document.getElementById('billingCompany').value = selectedDetail.billingCompany || selectedCustomer || '';
+  document.getElementById('billingName').value = selectedDetail.billingName || selectedDetail.billingContactName || selectedCustomer || '';
+  document.getElementById('billingAddress').value = selectedDetail.billingAddress || '';
+  document.getElementById('billingCity').value = selectedDetail.billingCity || '';
+  document.getElementById('billingState').value = selectedDetail.billingState || '';
+  document.getElementById('billingZip').value = selectedDetail.billingZip || '';
   document.getElementById('shipField').classList.toggle('hidden', type !== 'Ship Work');
 
   document.getElementById('referenceNumber').value = '';
@@ -600,6 +645,7 @@ function showPage(pageId) {
 
   if (pageId === 'allInvoices') renderAllInvoices();
   if (pageId === 'settings') fillSettingsForm();
+  if (pageId === 'invoiceForm') renderEquipmentOptions();
 }
 
 function goBack() {

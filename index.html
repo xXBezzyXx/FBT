@@ -200,7 +200,7 @@
 
       <div class="field">
         <label>Reference / Equipment</label>
-        <input id="referenceNumber" type="text" placeholder="REF# / Equipment / Serial Number" />
+        <div class="inline-input-row"><input id="referenceNumber" type="text" list="equipmentOptions" placeholder="REF# / Equipment / Serial Number" /><button type="button" class="inline-add-btn" onclick="addNewEquipment()">Add New</button></div><datalist id="equipmentOptions"></datalist>
       </div>
 
       <div class="field">

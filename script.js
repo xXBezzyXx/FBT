@@ -427,79 +427,48 @@ function escapeAttr(value) {
 }
 
 
+
+
+
+
+
+function getSelectedCustomerDetail() {
+  const name = selectedCustomer || '';
+  return customerDetails[name] || {};
+}
+
+
 function renderEquipmentOptions() {
-  const list = document.getElementById('equipmentOptions');
-  if (!list) return;
+  const select = document.getElementById('referenceNumber');
+  if (!select) return;
 
-  list.innerHTML = (equipmentList || [])
-    .map(item => `<option value="${escapeAttr(item)}"></option>`)
+  const current = select.value || '';
+  select.innerHTML = '<option value="">Select equipment</option>' + (equipmentList || [])
+    .map(item => `<option value="${escapeAttr(item)}">${escapeAttr(item)}</option>`)
     .join('');
+
+  if (current) select.value = current;
 }
 
-function addNewEquipment() {
-  const current = document.getElementById('referenceNumber') ? document.getElementById('referenceNumber').value.trim() : '';
-  const modal = document.getElementById('equipmentModal');
+async function addNewEquipment() {
+  const equipment = prompt('Enter new equipment name:');
 
-  document.getElementById('equipName').value = current;
-  document.getElementById('equipMake').value = '';
-  document.getElementById('equipModel').value = '';
-  document.getElementById('equipSerial').value = '';
-  document.getElementById('equipCustomer').value = selectedCustomer || '';
-  document.getElementById('equipNotes').value = '';
-
-  if (modal) modal.classList.remove('hidden');
-}
-
-function closeEquipmentModal() {
-  const modal = document.getElementById('equipmentModal');
-  if (modal) modal.classList.add('hidden');
-}
-
-function formatEquipmentReference(equipment) {
-  const name = equipment.equipmentName || equipment.name || '';
-  const make = equipment.make || '';
-  const model = equipment.model || '';
-  const serial = equipment.serialNumber || equipment.serial || '';
-
-  let line = name;
-
-  const detailParts = [];
-  if (make) detailParts.push(make);
-  if (model) detailParts.push(model);
-
-  if (detailParts.length) line += ' - ' + detailParts.join(' ');
-  if (serial) line += ' SN: ' + serial;
-
-  return line.trim();
-}
-
-async function saveNewEquipmentFromModal() {
-  const equipment = {
-    equipmentName: document.getElementById('equipName').value.trim(),
-    make: document.getElementById('equipMake').value.trim(),
-    model: document.getElementById('equipModel').value.trim(),
-    serialNumber: document.getElementById('equipSerial').value.trim(),
-    customer: document.getElementById('equipCustomer').value.trim(),
-    notes: document.getElementById('equipNotes').value.trim()
-  };
-
-  if (!equipment.equipmentName) {
-    alert('Equipment Name is required.');
-    return;
-  }
+  if (!equipment) return;
 
   try {
     showLoading('Saving equipment...');
-    const saved = await apiRequest('saveEquipment', equipment);
-    const ref = formatEquipmentReference(saved);
+    const saved = await apiRequest('saveEquipment', { equipmentName: equipment });
 
-    if (!equipmentList.includes(ref)) equipmentList.push(ref);
-    equipmentDetails[ref] = saved;
+    const value = saved.equipmentName || equipment;
+
+    if (!equipmentList.includes(value)) {
+      equipmentList.push(value);
+    }
 
     renderEquipmentOptions();
-    document.getElementById('referenceNumber').value = ref;
 
-    closeEquipmentModal();
+    const select = document.getElementById('referenceNumber');
+    if (select) select.value = value;
 
     if (typeof updatePreview === 'function') updatePreview();
   } catch (err) {
@@ -507,11 +476,6 @@ async function saveNewEquipmentFromModal() {
   } finally {
     hideLoading();
   }
-}
-
-function getSelectedCustomerDetail() {
-  const name = selectedCustomer || '';
-  return customerDetails[name] || {};
 }
 
 function renderCustomers() {

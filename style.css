@@ -862,3 +862,22 @@ body.locked .app-shell {
   margin-left: 0 !important;
   margin-right: 0 !important;
 }
+
+
+/* Simple Equipment dropdown */
+.equipment-picker-card {
+  margin-bottom: 10px;
+}
+
+.add-equipment-top-btn {
+  width: calc(100% - 28px);
+  margin: 0 14px 10px;
+  border: 0;
+  background: #064be0;
+  color: #fff;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 15px;
+  font-weight: 900;
+  cursor: pointer;
+}

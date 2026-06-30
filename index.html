@@ -198,9 +198,15 @@
         <input id="vesselName" type="text" placeholder="Enter vessel name" />
       </div>
 
-      <div class="field">
-        <label>Reference / Equipment</label>
-        <div class="inline-input-row"><input id="referenceNumber" type="text" list="equipmentOptions" placeholder="REF# / Equipment / Serial Number" /><button type="button" class="inline-add-btn" onclick="addNewEquipment()">Add New</button></div><datalist id="equipmentOptions"></datalist>
+      <div class="equipment-picker-card">
+        <button type="button" class="add-equipment-top-btn" onclick="addNewEquipment()">+ Add New Equipment</button>
+
+        <div class="field">
+          <label>Reference / Equipment</label>
+          <select id="referenceNumber" onchange="updatePreview && updatePreview()">
+            <option value="">Select equipment</option>
+          </select>
+        </div>
       </div>
 
       <div class="field">
@@ -292,50 +298,6 @@
       </button>
     </nav>
   </div>
-
-  
-  <div id="equipmentModal" class="modal-backdrop hidden">
-    <div class="modal-card">
-      <h2>Add Equipment</h2>
-
-      <div class="field modal-field">
-        <label>Equipment Name</label>
-        <input id="equipName" type="text" placeholder="CAT D5K" />
-      </div>
-
-      <div class="two-col modal-two-col">
-        <div class="field modal-field">
-          <label>Make</label>
-          <input id="equipMake" type="text" placeholder="Caterpillar" />
-        </div>
-
-        <div class="field modal-field">
-          <label>Model</label>
-          <input id="equipModel" type="text" placeholder="D5K2" />
-        </div>
-      </div>
-
-      <div class="field modal-field">
-        <label>Serial #</label>
-        <input id="equipSerial" type="text" placeholder="Serial number" />
-      </div>
-
-      <div class="field modal-field">
-        <label>Customer</label>
-        <input id="equipCustomer" type="text" placeholder="Customer name" />
-      </div>
-
-      <div class="field modal-field">
-        <label>Notes</label>
-        <textarea id="equipNotes" placeholder="Optional notes"></textarea>
-      </div>
-
-      <button class="wide primary" onclick="saveNewEquipmentFromModal()">Save Equipment</button>
-      <button class="wide gray" onclick="closeEquipmentModal()">Cancel</button>
-    </div>
-  </div>
-
-
   <script src="config.js"></script>
   <script src="script.js"></script>
 </body>

@@ -213,6 +213,7 @@ async function loadAppData() {
     const data = await apiRequest('getAppData');
 
     customers = data.customers || [];
+    jobTypes = data.jobTypes || jobTypes;
     invoices = data.invoices || [];
     invoiceCounter = data.nextInvoiceNumber || invoiceCounter;
     appSettings = data.settings || { invoiceEmail: '' };
@@ -239,6 +240,7 @@ let currentCreatedInvoiceNumber = '';
 appSettings = window.appSettings || { invoiceEmail: '' };
 
 let customers = [];
+let jobTypes = ['Wash', 'Repair', 'Parts / Materials', 'Other'];
 
 let invoices = [];
 
@@ -628,6 +630,13 @@ if (isLoggedIn()) loadAppData();
 // ===== Multi Job / VIN / Time / Qty + Hours System =====
 function escapeAttr(value){return String(value||'').replace(/"/g,'&quot;');}
 function escapeHtmlText(value){return String(value||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function buildJobTypeOptions(selected) {
+  return (jobTypes || ['Wash', 'Repair', 'Parts / Materials', 'Other'])
+    .map(type => `<option value="${escapeAttr(type)}" ${type === selected ? 'selected' : ''}>${type}</option>`)
+    .join('');
+}
+
 function addJob(data={}){const list=document.getElementById('jobsList');if(!list)return;const idx=list.children.length+1;const div=document.createElement('div');div.className='job-block';div.innerHTML=`<div class="job-block-head"><span>Job / Machine ${idx}</span><button class="job-remove-btn" onclick="removeJob(this)">Remove</button></div><div class="job-block-body"><div class="field"><label>Job Type</label><select class="job-type" onchange="jobTypeChanged(this);calculateInvoiceTotal();"><option value="Wash">Wash</option><option value="Repair">Repair</option><option value="Parts">Parts / Materials</option><option value="Other">Other</option></select></div><div class="field"><label>Equipment / Machine</label><input class="equipment-name" type="text" placeholder="Excavator, loader, dozer, etc." value="${escapeAttr(data.equipment||'')}" oninput="calculateInvoiceTotal()"></div><div class="field"><label>VIN / Serial Number</label><input class="vin-number" type="text" placeholder="VIN / SN" value="${escapeAttr(data.vin||'')}" oninput="calculateInvoiceTotal()"></div><div class="two-col"><div class="field"><label>Start Time</label><input class="start-time" type="time" value="${escapeAttr(data.startTime||'')}" onchange="calculateInvoiceTotal()"></div><div class="field"><label>End Time</label><input class="end-time" type="time" value="${escapeAttr(data.endTime||'')}" onchange="calculateInvoiceTotal()"></div></div><div class="job-help">Wash jobs can be billed by equipment/quantity. Repair jobs can use both quantity and labor hours.</div><div class="two-col"><div class="field"><label>Qty / Equipment Count</label><input class="job-qty" type="number" value="${data.qty??1}" min="0" step="0.01" oninput="calculateInvoiceTotal()"></div><div class="field"><label>Qty Rate</label><input class="job-qty-rate" type="number" value="${data.qtyRate??0}" min="0" step="0.01" oninput="calculateInvoiceTotal()"></div></div><div class="two-col"><div class="field"><label>Labor Hours</label><input class="job-hours" type="number" value="${data.hours??0}" min="0" step="0.01" oninput="calculateInvoiceTotal()"></div><div class="field"><label>Hourly Rate</label><input class="job-hour-rate" type="number" value="${data.hourRate??0}" min="0" step="0.01" oninput="calculateInvoiceTotal()"></div></div><div class="field"><label>Parts / Materials</label><input class="job-materials" type="number" value="${data.materials??0}" min="0" step="0.01" oninput="calculateInvoiceTotal()"></div><div class="field"><label>Work Description</label><textarea class="job-description" placeholder="Describe wash, repairs, parts, findings, etc." oninput="calculateInvoiceTotal()">${escapeHtmlText(data.description||'')}</textarea></div><div class="job-total-pill"><span>Job Total</span><span class="job-total">$0.00</span></div></div>`;list.appendChild(div);div.querySelector('.job-type').value=data.jobType||currentJobType||'Wash';jobTypeChanged(div.querySelector('.job-type'),true);calculateInvoiceTotal();}
 function removeJob(btn){const b=btn.closest('.job-block');if(b)b.remove();renumberJobs();calculateInvoiceTotal();}
 function renumberJobs(){document.querySelectorAll('.job-block').forEach((b,i)=>{const t=b.querySelector('.job-block-head span');if(t)t.innerText='Job / Machine '+(i+1);});}

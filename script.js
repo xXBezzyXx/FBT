@@ -1,18 +1,3 @@
-// Guaranteed global settings helper - do not remove
-var appSettings = window.appSettings || { invoiceEmail: '' };
-
-window.fillSettingsForm = function () {
-  var emailInput = document.getElementById('settingInvoiceEmail');
-  if (!emailInput) return;
-
-  var settings = window.appSettings || appSettings || { invoiceEmail: '' };
-  emailInput.value = settings.invoiceEmail || '';
-};
-
-function fillSettingsForm() {
-  return window.fillSettingsForm();
-}
-
 // Guaranteed global Settings helper
 var appSettings = window.appSettings || { invoiceEmail: '' };
 
@@ -24,6 +9,9 @@ window.fillSettingsForm = function fillSettingsForm() {
   }
 };
 
+function fillSettingsForm() {
+  return window.fillSettingsForm();
+}
 
 
 const LOGIN_USERNAME = 'Margaret';
@@ -135,7 +123,6 @@ async function loadSettings() {
     appSettings = data || { invoiceEmail: '' };
     window.appSettings = appSettings;
     window.appSettings = appSettings;
-    window.appSettings = appSettings;
     fillSettingsForm();
   } catch (err) {
     alert('Could not load settings: ' + err.message);
@@ -151,7 +138,6 @@ async function saveSettings() {
   try {
     showLoading('Saving settings...');
     appSettings = await apiRequest('saveSettings', { invoiceEmail });
-    window.appSettings = appSettings;
     window.appSettings = appSettings;
     window.appSettings = appSettings;
     fillSettingsForm();
@@ -231,7 +217,6 @@ async function loadAppData() {
     invoices = data.invoices || [];
     invoiceCounter = data.nextInvoiceNumber || invoiceCounter;
     appSettings = data.settings || { invoiceEmail: '' };
-    window.appSettings = appSettings;
     window.appSettings = appSettings;
     window.appSettings = appSettings;
     fillSettingsForm();
@@ -714,7 +699,85 @@ function buildJobTypeOptions(selected) {
     .join('');
 }
 
-function addJob(data={}){const list=document.getElementById('jobsList');if(!list)return;const idx=list.children.length+1;const div=document.createElement('div');div.className='job-block';div.innerHTML=`<div class="job-block-head"><span>Job / Machine ${idx}</span><button class="job-remove-btn" onclick="removeJob(this)">Remove</button></div><div class="job-block-body"><div class="field"><label>Job Type</label><select class="job-type" onchange="jobTypeChanged(this);calculateInvoiceTotal();"><option value="Wash">Wash</option><option value="Repair">Repair</option><option value="Parts">Parts / Materials</option><option value="Other">Other</option></select></div><div class="field"><label>Equipment / Machine</label><input class="equipment-name" type="text" placeholder="Excavator, loader, dozer, etc." value="${escapeAttr(data.equipment||'')}" oninput="calculateInvoiceTotal()"></div><div class="field"><label>VIN / Serial Number</label><input class="vin-number" type="text" placeholder="VIN / SN" value="${escapeAttr(data.vin||'')}" oninput="calculateInvoiceTotal()"></div><div class="two-col"><div class="field"><label>Start Time</label><input class="start-time" type="time" value="${escapeAttr(data.startTime||'')}" onchange="calculateInvoiceTotal()"></div><div class="field"><label>End Time</label><input class="end-time" type="time" value="${escapeAttr(data.endTime||'')}" onchange="calculateInvoiceTotal()"></div></div><div class="job-help">Wash jobs can be billed by equipment/quantity. Repair jobs can use both quantity and labor hours.</div><div class="two-col"><div class="field"><label>Qty / Equipment Count</label><input class="job-qty" type="number" value="${data.qty??1}" min="0" step="0.01" oninput="calculateInvoiceTotal()"></div><div class="field"><label>Qty Rate</label><input class="job-qty-rate" type="number" value="${data.qtyRate??0}" min="0" step="0.01" oninput="calculateInvoiceTotal()"></div></div><div class="two-col"><div class="field"><label>Labor Hours</label><input class="job-hours" type="number" value="${data.hours??0}" min="0" step="0.01" oninput="calculateInvoiceTotal()"></div><div class="field"><label>Hourly Rate</label><input class="job-hour-rate" type="number" value="${data.hourRate??0}" min="0" step="0.01" oninput="calculateInvoiceTotal()"></div></div><div class="field"><label>Parts / Materials</label><input class="job-materials" type="number" value="${data.materials??0}" min="0" step="0.01" oninput="calculateInvoiceTotal()"></div><div class="field"><label>Work Description</label><textarea class="job-description" placeholder="Describe wash, repairs, parts, findings, etc." oninput="calculateInvoiceTotal()">${escapeHtmlText(data.description||'')}</textarea></div><div class="job-total-pill"><span>Job Total</span><span class="job-total">$0.00</span></div></div>`;list.appendChild(div);div.querySelector('.job-type').value=data.jobType||currentJobType||'Wash';jobTypeChanged(div.querySelector('.job-type'),true);calculateInvoiceTotal();}
+
+/* =========================================================
+   TIME TO LABOR HOURS FIX
+   If Start Time and End Time are entered, Labor Hours updates
+   from the clock time unless the user manually overrides hours.
+   ========================================================= */
+
+function decimalHoursFromTimes(start, end) {
+  if (!start || !end) return 0;
+
+  const startParts = String(start).split(':').map(Number);
+  const endParts = String(end).split(':').map(Number);
+
+  if (startParts.length < 2 || endParts.length < 2) return 0;
+
+  let startMinutes = (startParts[0] * 60) + startParts[1];
+  let endMinutes = (endParts[0] * 60) + endParts[1];
+
+  // Handles overnight work, example 10:40 PM to 2:40 AM.
+  if (endMinutes < startMinutes) {
+    endMinutes += 24 * 60;
+  }
+
+  const diff = (endMinutes - startMinutes) / 60;
+  return Math.round(diff * 100) / 100;
+}
+
+function updateJobHoursFromTime(block, forceUpdate) {
+  if (!block) return;
+
+  const startInput = block.querySelector('.start-time');
+  const endInput = block.querySelector('.end-time');
+  const hoursInput = block.querySelector('.job-hours');
+
+  if (!startInput || !endInput || !hoursInput) return;
+
+  const calculatedHours = decimalHoursFromTimes(startInput.value, endInput.value);
+
+  if (calculatedHours <= 0) return;
+
+  const manualOverride = hoursInput.dataset.manualOverride === 'true';
+
+  // Force update when time fields change. Otherwise update only if user has not manually overridden.
+  if (forceUpdate || !manualOverride) {
+    hoursInput.value = calculatedHours;
+    hoursInput.dataset.autoCalculated = 'true';
+  }
+}
+
+function handleTimeChange(input) {
+  const block = input.closest('.job-block');
+  if (!block) return;
+
+  updateJobHoursFromTime(block, true);
+  calculateInvoiceTotal();
+}
+
+function handleHoursManualEdit(input) {
+  input.dataset.manualOverride = 'true';
+  calculateInvoiceTotal();
+}
+
+function prepareTimeAutoCalcFields(block) {
+  if (!block) return;
+
+  const startInput = block.querySelector('.start-time');
+  const endInput = block.querySelector('.end-time');
+  const hoursInput = block.querySelector('.job-hours');
+
+  if (startInput) startInput.setAttribute('onchange', 'handleTimeChange(this)');
+  if (endInput) endInput.setAttribute('onchange', 'handleTimeChange(this)');
+  if (hoursInput) {
+    hoursInput.setAttribute('oninput', 'handleHoursManualEdit(this)');
+    hoursInput.dataset.manualOverride = 'false';
+  }
+}
+
+function addJob(data={}){const list=document.getElementById('jobsList');if(!list)return;const idx=list.children.length+1;const div=document.createElement('div');div.className='job-block';div.innerHTML=`<div class="job-block-head"><span>Job / Machine ${idx}</span><button class="job-remove-btn" onclick="removeJob(this)">Remove</button></div><div class="job-block-body"><div class="field"><label>Job Type</label><select class="job-type" onchange="jobTypeChanged(this);calculateInvoiceTotal();"><option value="Wash">Wash</option><option value="Repair">Repair</option><option value="Parts">Parts / Materials</option><option value="Other">Other</option></select></div><div class="field"><label>Equipment / Machine</label><input class="equipment-name" type="text" placeholder="Excavator, loader, dozer, etc." value="${escapeAttr(data.equipment||'')}" oninput="calculateInvoiceTotal()"></div><div class="field"><label>VIN / Serial Number</label><input class="vin-number" type="text" placeholder="VIN / SN" value="${escapeAttr(data.vin||'')}" oninput="calculateInvoiceTotal()"></div><div class="two-col"><div class="field"><label>Start Time</label><input class="start-time" type="time" value="${escapeAttr(data.startTime||'')}" onchange="calculateInvoiceTotal()"></div><div class="field"><label>End Time</label><input class="end-time" type="time" value="${escapeAttr(data.endTime||'')}" onchange="calculateInvoiceTotal()"></div></div><div class="job-help">Wash jobs can be billed by equipment/quantity. Repair jobs can use both quantity and labor hours.</div><div class="two-col"><div class="field"><label>Qty / Equipment Count</label><input class="job-qty" type="number" value="${data.qty??1}" min="0" step="0.01" oninput="calculateInvoiceTotal()"></div><div class="field"><label>Qty Rate</label><input class="job-qty-rate" type="number" value="${data.qtyRate??0}" min="0" step="0.01" oninput="calculateInvoiceTotal()"></div></div><div class="two-col"><div class="field"><label>Labor Hours</label><input class="job-hours" type="number" value="${data.hours??0}" min="0" step="0.01" oninput="calculateInvoiceTotal()"></div><div class="field"><label>Hourly Rate</label><input class="job-hour-rate" type="number" value="${data.hourRate??0}" min="0" step="0.01" oninput="calculateInvoiceTotal()"></div></div><div class="field"><label>Parts / Materials</label><input class="job-materials" type="number" value="${data.materials??0}" min="0" step="0.01" oninput="calculateInvoiceTotal()"></div><div class="field"><label>Work Description</label><textarea class="job-description" placeholder="Describe wash, repairs, parts, findings, etc." oninput="calculateInvoiceTotal()">${escapeHtmlText(data.description||'')}</textarea></div><div class="job-total-pill"><span>Job Total</span><span class="job-total">$0.00</span></div></div>`;list.appendChild(div);
+  prepareTimeAutoCalcFields(div);div.querySelector('.job-type').value=data.jobType||currentJobType||'Wash';jobTypeChanged(div.querySelector('.job-type'),true);calculateInvoiceTotal();}
 function removeJob(btn){const b=btn.closest('.job-block');if(b)b.remove();renumberJobs();calculateInvoiceTotal();}
 function renumberJobs(){document.querySelectorAll('.job-block').forEach((b,i)=>{const t=b.querySelector('.job-block-head span');if(t)t.innerText='Job / Machine '+(i+1);});}
 function jobTypeChanged(sel,skip=false){const b=sel.closest('.job-block');if(!b)return;const type=sel.value,qty=b.querySelector('.job-qty'),qr=b.querySelector('.job-qty-rate'),hrs=b.querySelector('.job-hours'),hr=b.querySelector('.job-hour-rate');if(type==='Wash'){if(!qty.value||Number(qty.value)===0)qty.value=1;if(!hrs.value)hrs.value=0;if(!hr.value)hr.value=0;}if(type==='Repair'){if(!hrs.value||Number(hrs.value)===0)hrs.value=1;if(!hr.value||Number(hr.value)===0)hr.value=150;}if(!skip)calculateInvoiceTotal();}

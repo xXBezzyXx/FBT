@@ -443,51 +443,70 @@ function getSelectedCustomerDetail() {
 
 
 
+
+
+function normalizeEquipmentName(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function getEquipmentDetailByName(name) {
+  const target = normalizeEquipmentName(name);
+
+  if (!target || !equipmentDetails) return {};
+
+  if (equipmentDetails[name]) return equipmentDetails[name];
+
+  const keys = Object.keys(equipmentDetails);
+  const foundKey = keys.find(k => normalizeEquipmentName(k) === target);
+
+  return foundKey ? equipmentDetails[foundKey] : {};
+}
+
 function equipmentSelected() {
-  const select = document.getElementById('referenceNumber');
-  if (!select) return;
+  const field = document.getElementById('referenceNumber');
+  if (!field) return;
 
-  const equipmentName = select.value || '';
-  const detail = (equipmentDetails && equipmentDetails[equipmentName]) || {};
+  const equipmentName = field.value || '';
+  const detail = getEquipmentDetailByName(equipmentName);
 
-  const hours = Number(detail.hours || detail.defaultHours || 0);
+  const hours = Number(detail.hours || detail.qty || detail.quantity || 0);
   const rate = Number(detail.rate || detail.defaultRate || 0);
 
-  // Newer item-row layout
-  const firstQty = document.querySelector('.item-qty');
-  const firstRate = document.querySelector('.item-rate');
-  const firstAmount = document.querySelector('.item-amount');
-  const firstDesc = document.querySelector('.item-desc');
-
-  if (firstQty || firstRate || firstAmount) {
-    if (firstQty && hours) firstQty.value = hours;
-    if (firstRate && rate) firstRate.value = rate;
-    if (firstAmount && hours && rate) firstAmount.value = (hours * rate).toFixed(2);
-    if (firstDesc && equipmentName && !firstDesc.value) firstDesc.value = equipmentName;
-
-    if (typeof calculateTotals === 'function') calculateTotals();
+  if (!hours && !rate) {
     if (typeof updatePreview === 'function') updatePreview();
     return;
   }
 
-  // Original simple form layout
+  // Original/simple invoice form
   const hoursInput = document.getElementById('hours');
   const rateInput = document.getElementById('rate');
+  const materialsInput = document.getElementById('materials');
   const totalInput = document.getElementById('totalAmount');
   const workInput = document.getElementById('workPerformed');
 
   if (hoursInput && hours) hoursInput.value = hours;
   if (rateInput && rate) rateInput.value = rate;
 
+  const materials = materialsInput ? Number(materialsInput.value || 0) : 0;
+
   if (totalInput && hours && rate) {
-    const materialsInput = document.getElementById('materials');
-    const materials = materialsInput ? Number(materialsInput.value || 0) : 0;
     totalInput.value = ((hours * rate) + materials).toFixed(2);
   }
 
   if (workInput && equipmentName && !workInput.value) {
     workInput.value = equipmentName;
   }
+
+  // Newer item row layout, if present
+  const firstQty = document.querySelector('.item-qty');
+  const firstRate = document.querySelector('.item-rate');
+  const firstAmount = document.querySelector('.item-amount');
+  const firstDesc = document.querySelector('.item-desc');
+
+  if (firstQty && hours) firstQty.value = hours;
+  if (firstRate && rate) firstRate.value = rate;
+  if (firstAmount && hours && rate) firstAmount.value = (hours * rate).toFixed(2);
+  if (firstDesc && equipmentName && !firstDesc.value) firstDesc.value = equipmentName;
 
   if (typeof calculateTotal === 'function') calculateTotal();
   if (typeof calculateTotals === 'function') calculateTotals();
@@ -811,3 +830,10 @@ function goBack() {
 
 showLoginIfNeeded();
 if (isLoggedIn()) loadAppData();
+
+
+window.addEventListener('change', function(e) {
+  if (e && e.target && e.target.id === 'referenceNumber') {
+    equipmentSelected();
+  }
+});

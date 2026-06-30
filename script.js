@@ -30,92 +30,11 @@ function loginApp() {
     if (error) error.classList.add('hidden');
     showLoginIfNeeded();
     
-function fillSettingsForm() {
-  const emailInput = document.getElementById('settingInvoiceEmail');
-  if (emailInput) emailInput.value = appSettings.invoiceEmail || '';
-}
 
-async function loadSettings() {
-  try {
-    showLoading('Loading settings...');
-    const data = await apiRequest('getSettings');
-    appSettings = data || { invoiceEmail: '' };
-    fillSettingsForm();
-  } catch (err) {
-    alert('Could not load settings: ' + err.message);
-  } finally {
-    hideLoading();
-  }
-}
 
-async function saveSettings() {
-  const emailInput = document.getElementById('settingInvoiceEmail');
-  const invoiceEmail = emailInput ? emailInput.value.trim() : '';
 
-  try {
-    showLoading('Saving settings...');
-    appSettings = await apiRequest('saveSettings', { invoiceEmail });
-    fillSettingsForm();
-    alert('Settings saved.');
-  } catch (err) {
-    alert('Could not save settings: ' + err.message);
-  } finally {
-    hideLoading();
-  }
-}
 
-async function viewInvoicePdfByNumber(invoiceNumber) {
-  if (!invoiceNumber) {
-    alert('No invoice selected.');
-    return;
-  }
 
-  let popup = window.open('', '_blank');
-
-  try {
-    showLoading('Creating PDF...');
-    const result = await apiRequest('generateInvoicePdf', { invoiceNumber });
-
-    if (!result || !result.pdfUrl) throw new Error('PDF URL was not returned.');
-
-    if (popup) popup.location.href = result.pdfUrl;
-    else window.location.href = result.pdfUrl;
-  } catch (err) {
-    if (popup) popup.close();
-    alert('Could not open PDF: ' + err.message);
-  } finally {
-    hideLoading();
-  }
-}
-
-async function viewCreatedInvoicePdf() {
-  const invoiceNumber =
-    currentCreatedInvoiceNumber ||
-    (document.getElementById('createdNumber') ? document.getElementById('createdNumber').innerText : '');
-
-  return viewInvoicePdfByNumber(invoiceNumber);
-}
-
-async function sendCreatedInvoiceEmail() {
-  const invoiceNumber =
-    currentCreatedInvoiceNumber ||
-    (document.getElementById('createdNumber') ? document.getElementById('createdNumber').innerText : '');
-
-  if (!invoiceNumber) {
-    alert('No invoice selected.');
-    return;
-  }
-
-  try {
-    showLoading('Sending invoice...');
-    const result = await apiRequest('sendInvoiceEmail', { invoiceNumber });
-    alert('Invoice emailed to: ' + result.sentTo);
-  } catch (err) {
-    alert('Could not send invoice email: ' + err.message);
-  } finally {
-    hideLoading();
-  }
-}
 
 loadAppData();
   } else {
@@ -180,6 +99,103 @@ function hideLoading() {
   if (overlay) overlay.style.display = 'none';
 }
 
+
+function fillSettingsForm() {
+  const emailInput = document.getElementById('settingInvoiceEmail');
+  if (emailInput) {
+    emailInput.value = (window.appSettings && window.appSettings.invoiceEmail) || appSettings?.invoiceEmail || '';
+  }
+}
+
+async function loadSettings() {
+  try {
+    showLoading('Loading settings...');
+    const data = await apiRequest('getSettings');
+    appSettings = data || { invoiceEmail: '' };
+    window.appSettings = appSettings;
+    fillSettingsForm();
+  } catch (err) {
+    alert('Could not load settings: ' + err.message);
+  } finally {
+    hideLoading();
+  }
+}
+
+async function saveSettings() {
+  const emailInput = document.getElementById('settingInvoiceEmail');
+  const invoiceEmail = emailInput ? emailInput.value.trim() : '';
+
+  try {
+    showLoading('Saving settings...');
+    appSettings = await apiRequest('saveSettings', { invoiceEmail });
+    window.appSettings = appSettings;
+    fillSettingsForm();
+    alert('Settings saved.');
+  } catch (err) {
+    alert('Could not save settings: ' + err.message);
+  } finally {
+    hideLoading();
+  }
+}
+
+async function viewInvoicePdfByNumber(invoiceNumber) {
+  if (!invoiceNumber) {
+    alert('No invoice selected.');
+    return;
+  }
+
+  let popup = window.open('', '_blank');
+
+  try {
+    showLoading('Creating PDF...');
+    const result = await apiRequest('generateInvoicePdf', { invoiceNumber });
+
+    if (!result || !result.pdfUrl) {
+      throw new Error('PDF URL was not returned.');
+    }
+
+    if (popup) {
+      popup.location.href = result.pdfUrl;
+    } else {
+      window.location.href = result.pdfUrl;
+    }
+  } catch (err) {
+    if (popup) popup.close();
+    alert('Could not open PDF: ' + err.message);
+  } finally {
+    hideLoading();
+  }
+}
+
+async function viewCreatedInvoicePdf() {
+  const invoiceNumber =
+    currentCreatedInvoiceNumber ||
+    (document.getElementById('createdNumber') ? document.getElementById('createdNumber').innerText : '');
+
+  return viewInvoicePdfByNumber(invoiceNumber);
+}
+
+async function sendCreatedInvoiceEmail() {
+  const invoiceNumber =
+    currentCreatedInvoiceNumber ||
+    (document.getElementById('createdNumber') ? document.getElementById('createdNumber').innerText : '');
+
+  if (!invoiceNumber) {
+    alert('No invoice selected.');
+    return;
+  }
+
+  try {
+    showLoading('Sending invoice...');
+    const result = await apiRequest('sendInvoiceEmail', { invoiceNumber });
+    alert('Invoice emailed to: ' + result.sentTo);
+  } catch (err) {
+    alert('Could not send invoice email: ' + err.message);
+  } finally {
+    hideLoading();
+  }
+}
+
 async function loadAppData() {
   try {
     showLoading('Loading invoices...');
@@ -189,6 +205,7 @@ async function loadAppData() {
     invoices = data.invoices || [];
     invoiceCounter = data.nextInvoiceNumber || invoiceCounter;
     appSettings = data.settings || { invoiceEmail: '' };
+    window.appSettings = appSettings;
     fillSettingsForm();
 
     renderInvoices();
@@ -582,6 +599,7 @@ function goBack() {
   else if (active === 'created') showPage('dashboard');
   else showPage('dashboard');
 }
+
 
 
 

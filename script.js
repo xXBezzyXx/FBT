@@ -213,11 +213,6 @@ async function loadAppData() {
     const data = await apiRequest('getAppData');
 
     customers = data.customers || [];
-    jobTypes = data.jobTypes || [];
-    customerDetails = data.customerDetails || {};
-    equipmentList = data.equipment || [];
-    equipmentDetails = data.equipmentDetails || {};
-    renderEquipmentOptions();
     invoices = data.invoices || [];
     invoiceCounter = data.nextInvoiceNumber || invoiceCounter;
     appSettings = data.settings || { invoiceEmail: '' };
@@ -244,10 +239,6 @@ let currentCreatedInvoiceNumber = '';
 appSettings = window.appSettings || { invoiceEmail: '' };
 
 let customers = [];
-let jobTypes = [];
-let customerDetails = {};
-let equipmentList = [];
-let equipmentDetails = {};
 
 let invoices = [];
 
@@ -420,200 +411,6 @@ async function togglePaidFromAll(invoiceNumber) {
   }
 }
 
-
-
-
-
-function escapeAttr(value) {
-  return String(value || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
-
-
-
-
-
-
-function getSelectedCustomerDetail() {
-  const name = selectedCustomer || '';
-  return customerDetails[name] || {};
-}
-
-
-
-
-
-
-
-function normalizeEquipmentName(value) {
-  return String(value || '').trim().toLowerCase();
-}
-
-function getEquipmentDetailByName(name) {
-  const target = normalizeEquipmentName(name);
-
-  if (!target || !equipmentDetails) return {};
-
-  if (equipmentDetails[name]) return equipmentDetails[name];
-
-  const keys = Object.keys(equipmentDetails);
-  const foundKey = keys.find(k => normalizeEquipmentName(k) === target);
-
-  return foundKey ? equipmentDetails[foundKey] : {};
-}
-
-function equipmentSelected() {
-  const field = document.getElementById('referenceNumber');
-  if (!field) return;
-
-  const equipmentName = field.value || '';
-  const detail = getEquipmentDetailByName(equipmentName);
-
-  const hours = Number(detail.hours || detail.qty || detail.quantity || 0);
-  const rate = Number(detail.rate || detail.defaultRate || 0);
-
-  if (!hours && !rate) {
-    if (typeof updatePreview === 'function') updatePreview();
-    return;
-  }
-
-  // Original/simple invoice form
-  const hoursInput = document.getElementById('hours');
-  const rateInput = document.getElementById('rate');
-  const materialsInput = document.getElementById('materials');
-  const totalInput = document.getElementById('totalAmount');
-  const workInput = document.getElementById('workPerformed');
-
-  if (hoursInput && hours) hoursInput.value = hours;
-  if (rateInput && rate) rateInput.value = rate;
-
-  const materials = materialsInput ? Number(materialsInput.value || 0) : 0;
-
-  if (totalInput && hours && rate) {
-    totalInput.value = ((hours * rate) + materials).toFixed(2);
-  }
-
-  if (workInput && equipmentName && !workInput.value) {
-    workInput.value = equipmentName;
-  }
-
-  // Newer item row layout, if present
-  const firstQty = document.querySelector('.item-qty');
-  const firstRate = document.querySelector('.item-rate');
-  const firstAmount = document.querySelector('.item-amount');
-  const firstDesc = document.querySelector('.item-desc');
-
-  if (firstQty && hours) firstQty.value = hours;
-  if (firstRate && rate) firstRate.value = rate;
-  if (firstAmount && hours && rate) firstAmount.value = (hours * rate).toFixed(2);
-  if (firstDesc && equipmentName && !firstDesc.value) firstDesc.value = equipmentName;
-
-  if (typeof calculateTotal === 'function') calculateTotal();
-  if (typeof calculateTotals === 'function') calculateTotals();
-  if (typeof updatePreview === 'function') updatePreview();
-}
-
-function renderEquipmentOptions() {
-  const select = document.getElementById('referenceNumber');
-  if (!select) return;
-
-  const current = select.value || '';
-  select.innerHTML = '<option value="">Select equipment</option>' + (equipmentList || [])
-    .map(item => `<option value="${escapeAttr(item)}">${escapeAttr(item)}</option>`)
-    .join('');
-
-  if (current) select.value = current;
-}
-
-async function addNewEquipment() {
-  const equipment = prompt('Enter new equipment name:');
-
-  if (!equipment) return;
-
-  try {
-    showLoading('Saving equipment...');
-    const saved = await apiRequest('saveEquipment', { equipmentName: equipment });
-
-    const value = saved.equipmentName || equipment;
-
-    if (!equipmentList.includes(value)) {
-      equipmentList.push(value);
-    }
-
-    renderEquipmentOptions();
-
-    const select = document.getElementById('referenceNumber');
-    if (select) select.value = value;
-
-    if (typeof updatePreview === 'function') updatePreview();
-  } catch (err) {
-    alert('Could not save equipment: ' + err.message);
-  } finally {
-    hideLoading();
-  }
-}
-
-
-function renderJobTypes() {
-  const list = document.getElementById('jobTypeList');
-  if (!list) return;
-
-  if (!jobTypes || !jobTypes.length) {
-    list.innerHTML = `
-      <div class="job-type-empty">
-        <b>No Job Types Found</b><br>
-        Add job types in the Job Types sheet.
-      </div>
-    `;
-    return;
-  }
-
-  list.innerHTML = jobTypes.map(job => {
-    const name = job.name || '';
-    const icon = job.icon || '🧾';
-    const description = job.description || 'Create invoice for this job type.';
-    const rate = job.defaultRate || '';
-
-    return `
-      <button class="job-card" onclick="openFormFromJobType('${String(name).replace(/'/g, "\\'")}')">
-        <div class="job-icon">${icon}</div>
-        <div>
-          <div class="job-title">${name}</div>
-          <div class="job-subtitle">${description}${rate ? ' Default Rate: $' + rate : ''}</div>
-        </div>
-        <div class="arrow">›</div>
-      </button>
-    `;
-  }).join('');
-}
-
-function getJobTypeByName(name) {
-  return (jobTypes || []).find(j => String(j.name || '') === String(name || '')) || {
-    name: name,
-    icon: '🧾',
-    description: '',
-    defaultRate: 100
-  };
-}
-
-function openFormFromJobType(name) {
-  const job = getJobTypeByName(name);
-  openForm(job.name);
-
-  const rateInput = document.getElementById('rate');
-  if (rateInput && job.defaultRate) {
-    rateInput.value = job.defaultRate;
-  }
-
-  const workInput = document.getElementById('workPerformed');
-  if (workInput && job.description && !workInput.value) {
-    workInput.value = job.description;
-  }
-
-  if (typeof calculateTotal === 'function') calculateTotal();
-  if (typeof updatePreview === 'function') updatePreview();
-}
-
 function renderCustomers() {
   const customerList = document.getElementById('customerList');
 
@@ -652,7 +449,6 @@ function startInvoice() {
 
 function selectCustomer(name) {
   selectedCustomer = name;
-  renderJobTypes();
   showPage('jobType');
 }
 
@@ -661,21 +457,19 @@ function customCustomer() {
   if (!name) return;
 
   selectedCustomer = name;
-  renderJobTypes();
   showPage('jobType');
 }
 
 function openForm(type) {
   currentJobType = type;
-  const selectedDetail = getSelectedCustomerDetail();
 
   document.getElementById('formCustomer').value = selectedCustomer || 'Custom Customer';
-  document.getElementById('billingCompany').value = selectedDetail.billingCompany || selectedCustomer || '';
-  document.getElementById('billingName').value = selectedDetail.contactName || selectedDetail.billingContactName || '';
-  document.getElementById('billingAddress').value = selectedDetail.billingAddress || '';
-  document.getElementById('billingCity').value = selectedDetail.billingCity || '';
-  document.getElementById('billingState').value = selectedDetail.billingState || '';
-  document.getElementById('billingZip').value = selectedDetail.billingZip || '';
+  document.getElementById('billingCompany').value = selectedCustomer || '';
+  document.getElementById('billingName').value = '';
+  document.getElementById('billingAddress').value = '';
+  document.getElementById('billingCity').value = '';
+  document.getElementById('billingState').value = '';
+  document.getElementById('billingZip').value = '';
   document.getElementById('shipField').classList.toggle('hidden', type !== 'Ship Work');
 
   document.getElementById('referenceNumber').value = '';
@@ -806,8 +600,6 @@ function showPage(pageId) {
 
   if (pageId === 'allInvoices') renderAllInvoices();
   if (pageId === 'settings') fillSettingsForm();
-  if (pageId === 'invoiceForm') renderEquipmentOptions();
-  if (pageId === 'jobType') renderJobTypes();
 }
 
 function goBack() {
@@ -832,8 +624,17 @@ showLoginIfNeeded();
 if (isLoggedIn()) loadAppData();
 
 
-window.addEventListener('change', function(e) {
-  if (e && e.target && e.target.id === 'referenceNumber') {
-    equipmentSelected();
-  }
-});
+
+// ===== Multi Job / VIN / Time / Qty + Hours System =====
+function escapeAttr(value){return String(value||'').replace(/"/g,'&quot;');}
+function escapeHtmlText(value){return String(value||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function addJob(data={}){const list=document.getElementById('jobsList');if(!list)return;const idx=list.children.length+1;const div=document.createElement('div');div.className='job-block';div.innerHTML=`<div class="job-block-head"><span>Job / Machine ${idx}</span><button class="job-remove-btn" onclick="removeJob(this)">Remove</button></div><div class="job-block-body"><div class="field"><label>Job Type</label><select class="job-type" onchange="jobTypeChanged(this);calculateInvoiceTotal();"><option value="Wash">Wash</option><option value="Repair">Repair</option><option value="Parts">Parts / Materials</option><option value="Other">Other</option></select></div><div class="field"><label>Equipment / Machine</label><input class="equipment-name" type="text" placeholder="Excavator, loader, dozer, etc." value="${escapeAttr(data.equipment||'')}" oninput="calculateInvoiceTotal()"></div><div class="field"><label>VIN / Serial Number</label><input class="vin-number" type="text" placeholder="VIN / SN" value="${escapeAttr(data.vin||'')}" oninput="calculateInvoiceTotal()"></div><div class="two-col"><div class="field"><label>Start Time</label><input class="start-time" type="time" value="${escapeAttr(data.startTime||'')}" onchange="calculateInvoiceTotal()"></div><div class="field"><label>End Time</label><input class="end-time" type="time" value="${escapeAttr(data.endTime||'')}" onchange="calculateInvoiceTotal()"></div></div><div class="job-help">Wash jobs can be billed by equipment/quantity. Repair jobs can use both quantity and labor hours.</div><div class="two-col"><div class="field"><label>Qty / Equipment Count</label><input class="job-qty" type="number" value="${data.qty??1}" min="0" step="0.01" oninput="calculateInvoiceTotal()"></div><div class="field"><label>Qty Rate</label><input class="job-qty-rate" type="number" value="${data.qtyRate??0}" min="0" step="0.01" oninput="calculateInvoiceTotal()"></div></div><div class="two-col"><div class="field"><label>Labor Hours</label><input class="job-hours" type="number" value="${data.hours??0}" min="0" step="0.01" oninput="calculateInvoiceTotal()"></div><div class="field"><label>Hourly Rate</label><input class="job-hour-rate" type="number" value="${data.hourRate??0}" min="0" step="0.01" oninput="calculateInvoiceTotal()"></div></div><div class="field"><label>Parts / Materials</label><input class="job-materials" type="number" value="${data.materials??0}" min="0" step="0.01" oninput="calculateInvoiceTotal()"></div><div class="field"><label>Work Description</label><textarea class="job-description" placeholder="Describe wash, repairs, parts, findings, etc." oninput="calculateInvoiceTotal()">${escapeHtmlText(data.description||'')}</textarea></div><div class="job-total-pill"><span>Job Total</span><span class="job-total">$0.00</span></div></div>`;list.appendChild(div);div.querySelector('.job-type').value=data.jobType||currentJobType||'Wash';jobTypeChanged(div.querySelector('.job-type'),true);calculateInvoiceTotal();}
+function removeJob(btn){const b=btn.closest('.job-block');if(b)b.remove();renumberJobs();calculateInvoiceTotal();}
+function renumberJobs(){document.querySelectorAll('.job-block').forEach((b,i)=>{const t=b.querySelector('.job-block-head span');if(t)t.innerText='Job / Machine '+(i+1);});}
+function jobTypeChanged(sel,skip=false){const b=sel.closest('.job-block');if(!b)return;const type=sel.value,qty=b.querySelector('.job-qty'),qr=b.querySelector('.job-qty-rate'),hrs=b.querySelector('.job-hours'),hr=b.querySelector('.job-hour-rate');if(type==='Wash'){if(!qty.value||Number(qty.value)===0)qty.value=1;if(!hrs.value)hrs.value=0;if(!hr.value)hr.value=0;}if(type==='Repair'){if(!hrs.value||Number(hrs.value)===0)hrs.value=1;if(!hr.value||Number(hr.value)===0)hr.value=150;}if(!skip)calculateInvoiceTotal();}
+function calculateTimeHours(start,end){if(!start||!end)return 0;const [sh,sm]=start.split(':').map(Number),[eh,em]=end.split(':').map(Number);if(isNaN(sh)||isNaN(eh))return 0;let s=sh*60+(sm||0),e=eh*60+(em||0);if(e<s)e+=1440;return Math.round(((e-s)/60)*100)/100;}
+function collectJobs(){return [...document.querySelectorAll('.job-block')].map(b=>{const start=b.querySelector('.start-time').value||'',end=b.querySelector('.end-time').value||'',timeHours=calculateTimeHours(start,end);let hours=Number(b.querySelector('.job-hours').value||0);if(timeHours>0&&hours===0){hours=timeHours;b.querySelector('.job-hours').value=hours;}const qty=Number(b.querySelector('.job-qty').value||0),qtyRate=Number(b.querySelector('.job-qty-rate').value||0),hourRate=Number(b.querySelector('.job-hour-rate').value||0),materials=Number(b.querySelector('.job-materials').value||0);return{jobType:b.querySelector('.job-type').value||'',equipment:b.querySelector('.equipment-name').value||'',vin:b.querySelector('.vin-number').value||'',startTime:start,endTime:end,timeHours,qty,qtyRate,qtyAmount:qty*qtyRate,hours,hourRate,laborAmount:hours*hourRate,materials,description:b.querySelector('.job-description').value||'',total:(qty*qtyRate)+(hours*hourRate)+materials};});}
+function calculateInvoiceTotal(){let total=0;const jobs=collectJobs();jobs.forEach((j,i)=>{total+=Number(j.total||0);const el=document.querySelectorAll('.job-total')[i];if(el)el.innerText=money(j.total);});const ti=document.getElementById('totalAmount');if(ti)ti.value=total.toFixed(2);return total;}
+function calculateTotal(){calculateInvoiceTotal();}
+function openForm(type){currentJobType=type;document.getElementById('formCustomer').value=selectedCustomer||'Custom Customer';document.getElementById('billingCompany').value=selectedCustomer||'';document.getElementById('billingName').value='';document.getElementById('billingAddress').value='';document.getElementById('billingCity').value='';document.getElementById('billingState').value='';document.getElementById('billingZip').value='';document.getElementById('notes').value='';document.getElementById('jobsList').innerHTML='';if(type==='Washing'){addJob({jobType:'Wash',qty:1,qtyRate:0,hours:0,hourRate:0,materials:0,description:'Equipment wash'});}else{addJob({jobType:'Repair',qty:0,qtyRate:0,hours:1,hourRate:150,materials:0,description:'Repair work'});}showPage('invoiceForm');}
+async function createInvoice(){const jobs=collectJobs();const total=calculateInvoiceTotal();const customer=document.getElementById('formCustomer').value||selectedCustomer||'Custom Customer';const isoDate=new Date().toISOString().slice(0,10);const inv={number:'INV-'+invoiceCounter,customer,billingCompany:document.getElementById('billingCompany').value||customer,billingName:document.getElementById('billingName').value||'',billingAddress:document.getElementById('billingAddress').value||'',billingCity:document.getElementById('billingCity').value||'',billingState:document.getElementById('billingState').value||'',billingZip:document.getElementById('billingZip').value||'',referenceNumber:jobs.map(j=>[j.equipment,j.vin?'VIN/SN: '+j.vin:''].filter(Boolean).join(' | ')).filter(Boolean).join(' / '),jobType:jobs.map(j=>j.jobType).filter(Boolean).join(' + ')||currentJobType,vessel:'',location:'',workPerformed:jobs.map(j=>{const p=[];if(j.equipment)p.push('Equipment: '+j.equipment);if(j.vin)p.push('VIN/SN: '+j.vin);if(j.startTime||j.endTime)p.push('Time: '+(j.startTime||'')+' - '+(j.endTime||''));if(j.description)p.push(j.description);return p.join('\n');}).join('\n\n'),hours:jobs.reduce((s,j)=>s+Number(j.hours||0),0),rate:jobs[0]?.hourRate||0,materials:jobs.reduce((s,j)=>s+Number(j.materials||0),0),total,paid:false,date:isoDate,notes:document.getElementById('notes').value||'',jobs};try{showLoading('Saving invoice...');const saved=await apiRequest('saveInvoice',inv);invoices.unshift(saved);invoiceCounter++;currentCreatedInvoiceNumber=saved.number;document.getElementById('createdNumber').innerText=saved.number;document.getElementById('createdCustomer').innerText=saved.customer;document.getElementById('createdTotal').innerText=money(saved.total);document.getElementById('createdStatus').innerText=saved.paid?'Paid':'Unpaid';renderInvoices();renderAllInvoices();showPage('created');}catch(err){alert('Could not save invoice: '+err.message);}finally{hideLoading();}}

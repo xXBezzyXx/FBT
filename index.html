@@ -127,107 +127,41 @@
 
     <main id="jobType" class="page">
       <div class="question-title">What kind of job are you doing?</div>
-      <section id="jobTypeList" class="job-type-list"></section>
+
+      <button class="job-card" onclick="openForm('Ship Work')">
+        <div class="job-icon">🚢</div>
+        <div>
+          <div class="job-title">Ship Work</div>
+          <div class="job-subtitle">Repairs, labor, material, and vessel work.</div>
+        </div>
+        <div class="arrow">›</div>
+      </button>
+
+      <button class="job-card" onclick="openForm('Washing')">
+        <div class="job-icon">💧</div>
+        <div>
+          <div class="job-title">Washing</div>
+          <div class="job-subtitle">Pressure washing, cleaning, and wash-down work.</div>
+        </div>
+        <div class="arrow">›</div>
+      </button>
+
       <button class="wide gray" onclick="showPage('customers')">Back</button>
     </main>
 
     <main id="invoiceForm" class="page">
-      <h2 class="form-heading">Invoice Details</h2>
-
-      <div class="field">
-        <label>Customer</label>
-        <input id="formCustomer" type="text" />
-      </div>
-
+      <h2 class="form-heading">Create Invoice</h2>
+      <div class="field"><label>Customer</label><input id="formCustomer" type="text" /></div>
       <div class="section-mini-title">Billing Information</div>
-
-      <div class="field">
-        <label>Billing Company</label>
-        <input id="billingCompany" type="text" placeholder="Company name" />
-      </div>
-
-      <div class="field">
-        <label>Billing Contact Name</label>
-        <input id="billingName" type="text" placeholder="Contact name" />
-      </div>
-
-      <div class="field">
-        <label>Billing Address</label>
-        <input id="billingAddress" type="text" placeholder="Street address" />
-      </div>
-
-      <div class="three-col">
-        <div class="field">
-          <label>City</label>
-          <input id="billingCity" type="text" placeholder="City" />
-        </div>
-
-        <div class="field">
-          <label>State</label>
-          <input id="billingState" type="text" placeholder="State" />
-        </div>
-
-        <div class="field">
-          <label>Zip</label>
-          <input id="billingZip" type="text" placeholder="Zip" />
-        </div>
-      </div>
-
-      <div class="section-mini-title">Job Information</div>
-
-      <div id="shipField" class="field hidden">
-        <label>Vessel / Ship Name</label>
-        <input id="vesselName" type="text" placeholder="Enter vessel name" />
-      </div>
-
-      <div class="equipment-picker-card">
-        <button type="button" class="add-equipment-top-btn" onclick="addNewEquipment()">+ Add New Equipment</button>
-
-        <div class="field">
-          <label>Reference / Equipment</label>
-          <select id="referenceNumber" onchange="equipmentSelected()">
-            <option value="">Select equipment</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="field">
-        <label>Job Location</label>
-        <input id="jobLocation" type="text" placeholder="Enter location" />
-      </div>
-
-      <div class="field">
-        <label>Product Description / Work Performed</label>
-        <textarea id="workPerformed" placeholder="Each line will show on the invoice PDF"></textarea>
-      </div>
-
-      <div class="two-col">
-        <div class="field">
-          <label>Hours / Qty</label>
-          <input id="hours" type="number" value="1" oninput="calculateTotal()" />
-        </div>
-
-        <div class="field">
-          <label>Rate</label>
-          <input id="rate" type="number" value="100" oninput="calculateTotal()" />
-        </div>
-      </div>
-
-      <div class="field">
-        <label>Materials / Extra Charges</label>
-        <input id="materials" type="number" value="0" oninput="calculateTotal()" />
-      </div>
-
-      <div class="field total-field">
-        <label>Total</label>
-        <input id="totalAmount" type="number" value="100" />
-      </div>
-
-      <div class="field">
-        <label>Notes</label>
-        <textarea id="notes" placeholder="Optional notes shown on the PDF"></textarea>
-      </div>
-
+      <div class="field"><label>Billing Company</label><input id="billingCompany" type="text" placeholder="Company name" /></div>
+      <div class="field"><label>Billing Contact Name</label><input id="billingName" type="text" placeholder="Contact name" /></div>
+      <div class="field"><label>Billing Address</label><input id="billingAddress" type="text" placeholder="Street address" /></div>
+      <div class="three-col"><div class="field"><label>City</label><input id="billingCity" type="text" /></div><div class="field"><label>State</label><input id="billingState" type="text" /></div><div class="field"><label>Zip</label><input id="billingZip" type="text" /></div></div>
+      <div class="section-mini-title">Invoice Jobs / Machines</div>
+      <div id="jobsList"></div>
+      <button class="wide outline-green" onclick="addJob()">+ Add Another Job / Machine</button>
+      <div class="field total-field"><label>Invoice Total</label><input id="totalAmount" type="number" value="0" readonly /></div>
+      <div class="field"><label>Notes</label><textarea id="notes" placeholder="Optional notes shown on the PDF"></textarea></div>
       <button class="wide primary" onclick="createInvoice()">Create Invoice</button>
     </main>
 
@@ -280,6 +214,7 @@
       </button>
     </nav>
   </div>
+
   <script src="config.js"></script>
   <script src="script.js"></script>
 </body>

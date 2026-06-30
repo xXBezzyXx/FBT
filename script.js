@@ -213,6 +213,7 @@ async function loadAppData() {
     const data = await apiRequest('getAppData');
 
     customers = data.customers || [];
+    jobTypes = data.jobTypes || [];
     customerDetails = data.customerDetails || {};
     equipmentList = data.equipment || [];
     equipmentDetails = data.equipmentDetails || {};
@@ -243,6 +244,7 @@ let currentCreatedInvoiceNumber = '';
 appSettings = window.appSettings || { invoiceEmail: '' };
 
 let customers = [];
+let jobTypes = [];
 let customerDetails = {};
 let equipmentList = [];
 let equipmentDetails = {};
@@ -503,6 +505,67 @@ async function addNewEquipment() {
   }
 }
 
+
+function renderJobTypes() {
+  const list = document.getElementById('jobTypeList');
+  if (!list) return;
+
+  if (!jobTypes || !jobTypes.length) {
+    list.innerHTML = `
+      <div class="job-type-empty">
+        <b>No Job Types Found</b><br>
+        Add job types in the Job Types sheet.
+      </div>
+    `;
+    return;
+  }
+
+  list.innerHTML = jobTypes.map(job => {
+    const name = job.name || '';
+    const icon = job.icon || '🧾';
+    const description = job.description || 'Create invoice for this job type.';
+    const rate = job.defaultRate || '';
+
+    return `
+      <button class="job-card" onclick="openFormFromJobType('${String(name).replace(/'/g, "\\'")}')">
+        <div class="job-icon">${icon}</div>
+        <div>
+          <div class="job-title">${name}</div>
+          <div class="job-subtitle">${description}${rate ? ' Default Rate: $' + rate : ''}</div>
+        </div>
+        <div class="arrow">›</div>
+      </button>
+    `;
+  }).join('');
+}
+
+function getJobTypeByName(name) {
+  return (jobTypes || []).find(j => String(j.name || '') === String(name || '')) || {
+    name: name,
+    icon: '🧾',
+    description: '',
+    defaultRate: 100
+  };
+}
+
+function openFormFromJobType(name) {
+  const job = getJobTypeByName(name);
+  openForm(job.name);
+
+  const rateInput = document.getElementById('rate');
+  if (rateInput && job.defaultRate) {
+    rateInput.value = job.defaultRate;
+  }
+
+  const workInput = document.getElementById('workPerformed');
+  if (workInput && job.description && !workInput.value) {
+    workInput.value = job.description;
+  }
+
+  if (typeof calculateTotal === 'function') calculateTotal();
+  if (typeof updatePreview === 'function') updatePreview();
+}
+
 function renderCustomers() {
   const customerList = document.getElementById('customerList');
 
@@ -541,6 +604,7 @@ function startInvoice() {
 
 function selectCustomer(name) {
   selectedCustomer = name;
+  renderJobTypes();
   showPage('jobType');
 }
 
@@ -549,6 +613,7 @@ function customCustomer() {
   if (!name) return;
 
   selectedCustomer = name;
+  renderJobTypes();
   showPage('jobType');
 }
 
@@ -694,6 +759,7 @@ function showPage(pageId) {
   if (pageId === 'allInvoices') renderAllInvoices();
   if (pageId === 'settings') fillSettingsForm();
   if (pageId === 'invoiceForm') renderEquipmentOptions();
+  if (pageId === 'jobType') renderJobTypes();
 }
 
 function goBack() {

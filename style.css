@@ -881,3 +881,21 @@ body.locked .app-shell {
   font-weight: 900;
   cursor: pointer;
 }
+
+
+/* Dynamic Job Type List */
+.job-type-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-bottom: 120px;
+}
+
+.job-type-empty {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 18px;
+  color: #666;
+  text-align: center;
+}

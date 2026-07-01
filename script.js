@@ -4,7 +4,6 @@ var appSettings = window.appSettings || { invoiceEmail: '' };
 window.fillSettingsForm = 
 async function reloadJobTypesNow() {
   await loadAppData();
-  alert('Job Types reloaded from the Job Types sheet.');
 }
 
 function fillSettingsForm() {
@@ -219,9 +218,9 @@ async function loadAppData() {
     const data = await apiRequest('getAppData');
 
     customers = data.customers || [];
-    jobTypes = data.jobTypes || [];
+    jobTypes = normalizeJobTypesResponse(data.jobTypes);
     if (data.jobTypesError) console.warn(data.jobTypesError);
-    jobTypes = data.jobTypes || [];
+    jobTypes = normalizeJobTypesResponse(data.jobTypes);
     invoices = data.invoices || [];
     invoiceCounter = data.nextInvoiceNumber || invoiceCounter;
     appSettings = data.settings || { invoiceEmail: '' };
@@ -721,23 +720,35 @@ if (isLoggedIn()) loadAppData();
 function escapeAttr(value){return String(value||'').replace(/"/g,'&quot;');}
 function escapeHtmlText(value){return String(value||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
+function normalizeJobTypesResponse(value) {
+  if (Array.isArray(value)) return value;
+  if (value && Array.isArray(value.jobTypes)) return value.jobTypes;
+  return [];
+}
+
 function buildJobTypeOptions(selected) {
   const types = Array.isArray(jobTypes) ? jobTypes : [];
 
-  if (!types.length) {
+  const activeTypes = types
+    .filter(j => {
+      const active = typeof j === 'string' ? true : String(j.active || 'TRUE').toLowerCase() !== 'false';
+      const name = typeof j === 'string' ? j : (j.name || j.jobType || '');
+      return active && String(name || '').trim();
+    });
+
+  if (!activeTypes.length) {
     return `<option value="Repair">Repair</option><option value="Washing">Washing</option>`;
   }
 
-  return types
-    .filter(j => String(j.active || 'true').toLowerCase() !== 'false')
+  return activeTypes
     .map(j => {
       const name = typeof j === 'string' ? j : (j.name || j.jobType || '');
-      if (!name) return '';
       const selectedText = String(name).toLowerCase() === String(selected || '').toLowerCase() ? 'selected' : '';
       return `<option value="${escapeAttr(name)}" ${selectedText}>${name}</option>`;
     })
     .join('');
 }
+
 
 
 

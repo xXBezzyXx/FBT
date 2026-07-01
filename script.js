@@ -1,7 +1,13 @@
 // Guaranteed global Settings helper
 var appSettings = window.appSettings || { invoiceEmail: '' };
 
-window.fillSettingsForm = function fillSettingsForm() {
+window.fillSettingsForm = 
+async function reloadJobTypesNow() {
+  await loadAppData();
+  alert('Job Types reloaded from the Job Types sheet.');
+}
+
+function fillSettingsForm() {
   var emailInput = document.getElementById('settingInvoiceEmail');
   if (emailInput) {
     var settings = window.appSettings || appSettings || { invoiceEmail: '' };
@@ -213,6 +219,8 @@ async function loadAppData() {
     const data = await apiRequest('getAppData');
 
     customers = data.customers || [];
+    jobTypes = data.jobTypes || [];
+    if (data.jobTypesError) console.warn(data.jobTypesError);
     jobTypes = data.jobTypes || [];
     invoices = data.invoices || [];
     invoiceCounter = data.nextInvoiceNumber || invoiceCounter;
@@ -714,12 +722,11 @@ function escapeAttr(value){return String(value||'').replace(/"/g,'&quot;');}
 function escapeHtmlText(value){return String(value||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 function buildJobTypeOptions(selected) {
-  const types = Array.isArray(jobTypes) && jobTypes.length
-    ? jobTypes
-    : [
-        { name: 'Repair', description: 'Labor Hours', icon: '🔧', defaultRate: 185, active: true },
-        { name: 'Washing', description: 'Labor Hours', icon: '💧', defaultRate: 100, active: true }
-      ];
+  const types = Array.isArray(jobTypes) ? jobTypes : [];
+
+  if (!types.length) {
+    return `<option value="Repair">Repair</option><option value="Washing">Washing</option>`;
+  }
 
   return types
     .filter(j => String(j.active || 'true').toLowerCase() !== 'false')
@@ -731,6 +738,7 @@ function buildJobTypeOptions(selected) {
     })
     .join('');
 }
+
 
 
 

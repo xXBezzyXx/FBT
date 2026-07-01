@@ -1,20 +1,3 @@
-// Guaranteed global app data variables - must stay at top
-var selectedCustomer = window.selectedCustomer || '';
-var currentJobType = window.currentJobType || '';
-var invoiceCounter = window.invoiceCounter || 1013;
-var currentCreatedInvoiceNumber = window.currentCreatedInvoiceNumber || '';
-var customers = window.customers || [];
-var invoices = window.invoices || [];
-var jobTypes = window.jobTypes || [];
-
-window.selectedCustomer = selectedCustomer;
-window.currentJobType = currentJobType;
-window.invoiceCounter = invoiceCounter;
-window.currentCreatedInvoiceNumber = currentCreatedInvoiceNumber;
-window.customers = customers;
-window.invoices = invoices;
-window.jobTypes = jobTypes;
-
 // Guaranteed global Settings helper
 var appSettings = window.appSettings || { invoiceEmail: '' };
 
@@ -230,14 +213,12 @@ async function loadAppData() {
     const data = await apiRequest('getAppData');
 
     customers = data.customers || [];
-    window.customers = customers;
     jobTypes = Array.isArray(data.jobTypes) ? data.jobTypes : [];
-    window.jobTypes = jobTypes;
-    window.jobTypes = jobTypes;
+    jobTypes = data.jobTypes || [];
     invoices = data.invoices || [];
-    window.invoices = invoices;
     invoiceCounter = data.nextInvoiceNumber || invoiceCounter;
     appSettings = data.settings || { invoiceEmail: '' };
+    window.appSettings = appSettings;
     window.appSettings = appSettings;
     fillSettingsForm();
 
@@ -253,8 +234,16 @@ async function loadAppData() {
   }
 }
 
-
+let selectedCustomer = '';
+let currentJobType = '';
+let invoiceCounter = 1013;
+let currentCreatedInvoiceNumber = '';
 appSettings = window.appSettings || { invoiceEmail: '' };
+
+let customers = [];
+let jobTypes = ['Wash', 'Repair', 'Parts / Materials', 'Other'];
+
+let invoices = [];
 
 function money(value) {
   return '$' + Number(value || 0).toLocaleString(undefined, {
@@ -533,36 +522,27 @@ function customCustomer() {
 function openForm(type) {
   currentJobType = type || 'Repair';
 
-  const formCustomer = document.getElementById('formCustomer');
-  const billingCompany = document.getElementById('billingCompany');
-  const billingName = document.getElementById('billingName');
-  const billingAddress = document.getElementById('billingAddress');
-  const billingCity = document.getElementById('billingCity');
-  const billingState = document.getElementById('billingState');
-  const billingZip = document.getElementById('billingZip');
-  const notes = document.getElementById('notes');
-  const totalAmount = document.getElementById('totalAmount');
+  document.getElementById('formCustomer').value = selectedCustomer || 'Custom Customer';
+  document.getElementById('billingCompany').value = selectedCustomer || '';
+  document.getElementById('billingName').value = '';
+  document.getElementById('billingAddress').value = '';
+  document.getElementById('billingCity').value = '';
+  document.getElementById('billingState').value = '';
+  document.getElementById('billingZip').value = '';
+  document.getElementById('shipField').classList.toggle('hidden', type !== 'Ship Work');
 
-  if (formCustomer) formCustomer.value = selectedCustomer || 'Custom Customer';
-  if (billingCompany) billingCompany.value = selectedCustomer || '';
-  if (billingName) billingName.value = '';
-  if (billingAddress) billingAddress.value = '';
-  if (billingCity) billingCity.value = '';
-  if (billingState) billingState.value = '';
-  if (billingZip) billingZip.value = '';
-  if (notes) notes.value = '';
-  if (totalAmount) totalAmount.value = '0.00';
+  document.getElementById('referenceNumber').value = '';
+  document.getElementById('jobLocation').value = '';
+  document.getElementById('workPerformed').value = '';
+  document.getElementById('hours').value = 1;
+  document.getElementById('rate').value = type === 'Ship Work' ? 150 : 100;
+  document.getElementById('materials').value = 0;
+  document.getElementById('notes').value = '';
 
-  const jobsList = document.getElementById('jobsList');
-  if (jobsList) jobsList.innerHTML = '';
-
-  addJob({ jobType: currentJobType });
-
-  calculateInvoiceTotal();
+  calculateTotal();
   showPage('invoiceForm');
   document.getElementById('pageTitle').innerText = 'Invoice Maker';
 }
-
 
 function calculateTotal() {
   const hours = Number(document.getElementById('hours').value || 0);
@@ -685,18 +665,13 @@ function showPage(pageId) {
 function goBack() {
   const active = document.querySelector('.page.active').id;
 
-  if (active === 'customers') {
-    showPage('dashboard');
-  } else if (active === 'invoiceForm') {
+  if (active === 'customers') showPage('dashboard');
+  else if (active === 'invoiceForm') {
     renderCustomers();
     showPage('customers');
-  } else if (active === 'created') {
-    showPage('dashboard');
-  } else if (active === 'allInvoices' || active === 'settings') {
-    showPage('dashboard');
-  } else {
-    showPage('dashboard');
   }
+  else if (active === 'created') showPage('dashboard');
+  else showPage('dashboard');
 }
 
 
@@ -817,85 +792,31 @@ function addJob(data = {}) {
   const idx = list.children.length + 1;
   const div = document.createElement('div');
   div.className = 'job-block';
-
   const selectedType = data.jobType || currentJobType || 'Repair';
 
   div.innerHTML = `
-    <div class="job-block-head">
-      <span>Job / Machine ${idx}</span>
-      <button class="job-remove-btn" onclick="removeJob(this)">Remove</button>
-    </div>
+    <div class="job-block-head"><span>Job / Machine ${idx}</span><button class="job-remove-btn" onclick="removeJob(this)">Remove</button></div>
     <div class="job-block-body">
-      <div class="field">
-        <label>Job Type</label>
-        <select class="job-type" onchange="jobTypeChanged(this); calculateInvoiceTotal();">
-          ${buildJobTypeOptions(selectedType)}
-        </select>
-      </div>
-
-      <div class="field">
-        <label>Equipment / Machine</label>
-        <input class="equipment-name" type="text" placeholder="Excavator, loader, dozer, etc." value="${escapeAttr(data.equipment || '')}" oninput="calculateInvoiceTotal()">
-      </div>
-
-      <div class="field">
-        <label>VIN / Serial Number</label>
-        <input class="vin-number" type="text" placeholder="VIN / SN" value="${escapeAttr(data.vin || '')}" oninput="calculateInvoiceTotal()">
-      </div>
-
+      <div class="field"><label>Job Type</label><select class="job-type" onchange="jobTypeChanged(this);calculateInvoiceTotal();">${buildJobTypeOptions(selectedType)}</select></div>
+      <div class="field"><label>Equipment / Machine</label><input class="equipment-name" type="text" placeholder="Excavator, loader, dozer, etc." value="${escapeAttr(data.equipment || '')}" oninput="calculateInvoiceTotal()"></div>
+      <div class="field"><label>VIN / Serial Number</label><input class="vin-number" type="text" placeholder="VIN / SN" value="${escapeAttr(data.vin || '')}" oninput="calculateInvoiceTotal()"></div>
       <div class="two-col">
-        <div class="field">
-          <label>Start Time</label>
-          <input class="start-time" type="time" value="${escapeAttr(data.startTime || '')}" onchange="handleTimeChange(this)">
-        </div>
-        <div class="field">
-          <label>End Time</label>
-          <input class="end-time" type="time" value="${escapeAttr(data.endTime || '')}" onchange="handleTimeChange(this)">
-        </div>
+        <div class="field"><label>Start Time</label><input class="start-time" type="time" value="${escapeAttr(data.startTime || '')}" onchange="handleTimeChange(this)"></div>
+        <div class="field"><label>End Time</label><input class="end-time" type="time" value="${escapeAttr(data.endTime || '')}" onchange="handleTimeChange(this)"></div>
       </div>
-
-      <div class="job-help">
-        Wash jobs can be billed by equipment/quantity. Repair jobs can use both quantity and labor hours.
-      </div>
-
+      <div class="job-help">Wash jobs can be billed by equipment/quantity. Repair jobs can use both quantity and labor hours.</div>
       <div class="two-col">
-        <div class="field">
-          <label>Qty / Equipment Count</label>
-          <input class="job-qty" type="number" value="${data.qty ?? 1}" min="0" step="0.01" oninput="calculateInvoiceTotal()">
-        </div>
-        <div class="field">
-          <label>Qty Rate</label>
-          <input class="job-qty-rate" type="number" value="${data.qtyRate ?? 0}" min="0" step="0.01" oninput="calculateInvoiceTotal()">
-        </div>
+        <div class="field"><label>Qty / Equipment Count</label><input class="job-qty" type="number" value="${data.qty ?? 1}" min="0" step="0.01" oninput="calculateInvoiceTotal()"></div>
+        <div class="field"><label>Qty Rate</label><input class="job-qty-rate" type="number" value="${data.qtyRate ?? 0}" min="0" step="0.01" oninput="calculateInvoiceTotal()"></div>
       </div>
-
       <div class="two-col">
-        <div class="field">
-          <label>Labor Hours</label>
-          <input class="job-hours" type="number" value="${data.hours ?? 0}" min="0" step="0.01" oninput="handleHoursManualEdit(this)">
-        </div>
-        <div class="field">
-          <label>Hourly Rate</label>
-          <input class="job-hour-rate" type="number" value="${data.hourRate ?? 0}" min="0" step="0.01" oninput="calculateInvoiceTotal()">
-        </div>
+        <div class="field"><label>Labor Hours</label><input class="job-hours" type="number" value="${data.hours ?? 0}" min="0" step="0.01" oninput="handleHoursManualEdit(this)"></div>
+        <div class="field"><label>Hourly Rate</label><input class="job-hour-rate" type="number" value="${data.hourRate ?? 0}" min="0" step="0.01" oninput="calculateInvoiceTotal()"></div>
       </div>
-
-      <div class="field">
-        <label>Parts / Materials</label>
-        <input class="job-materials" type="number" value="${data.materials ?? 0}" min="0" step="0.01" oninput="calculateInvoiceTotal()">
-      </div>
-
-      <div class="field">
-        <label>Work Description</label>
-        <textarea class="job-description" placeholder="Describe wash, repairs, parts, findings, etc." oninput="calculateInvoiceTotal()">${escapeHtmlText(data.description || '')}</textarea>
-      </div>
-
-      <div class="job-total-pill">
-        <span>Job Total</span>
-        <span class="job-total">$0.00</span>
-      </div>
-    </div>
-  `;
+      <div class="field"><label>Parts / Materials</label><input class="job-materials" type="number" value="${data.materials ?? 0}" min="0" step="0.01" oninput="calculateInvoiceTotal()"></div>
+      <div class="field"><label>Work Description</label><textarea class="job-description" placeholder="Describe wash, repairs, parts, findings, etc." oninput="calculateInvoiceTotal()">${escapeHtmlText(data.description || '')}</textarea></div>
+      <div class="job-total-pill"><span>Job Total</span><span class="job-total">$0.00</span></div>
+    </div>`;
 
   list.appendChild(div);
   prepareTimeAutoCalcFields(div);
@@ -903,7 +824,6 @@ function addJob(data = {}) {
   const typeSelect = div.querySelector('.job-type');
   typeSelect.value = selectedType;
   jobTypeChanged(typeSelect, true);
-
   calculateInvoiceTotal();
 }
 
@@ -922,24 +842,15 @@ function jobTypeChanged(sel, skip = false) {
   const hourRate = block.querySelector('.job-hour-rate');
   const desc = block.querySelector('.job-description');
 
-  if (defaults.description && desc && !desc.value) {
-    desc.value = defaults.description;
-  }
-
-  if (defaults.hourlyRate && hourRate && (!hourRate.value || Number(hourRate.value) === 0)) {
-    hourRate.value = defaults.hourlyRate;
-  }
-
-  if (defaults.qtyRate && qtyRate && (!qtyRate.value || Number(qtyRate.value) === 0)) {
-    qtyRate.value = defaults.qtyRate;
-  }
+  if (defaults.description && desc && !desc.value) desc.value = defaults.description;
+  if (defaults.hourlyRate && hourRate && (!hourRate.value || Number(hourRate.value) === 0)) hourRate.value = defaults.hourlyRate;
+  if (defaults.qtyRate && qtyRate && (!qtyRate.value || Number(qtyRate.value) === 0)) qtyRate.value = defaults.qtyRate;
 
   const typeText = String(type || '').toLowerCase();
-
   if (typeText.includes('wash')) {
     if (qty && (!qty.value || Number(qty.value) === 0)) qty.value = 1;
     if (hrs && (!hrs.value || Number(hrs.value) === 0)) hrs.value = 0;
-  } else if (typeText.includes('repair') || typeText.includes('labor') || typeText.includes('ship')) {
+  } else {
     if (hrs && (!hrs.value || Number(hrs.value) === 0)) hrs.value = 1;
   }
 
@@ -960,9 +871,7 @@ function getJobTypeDefaults(typeName) {
     return String(name).toLowerCase() === String(typeName || '').toLowerCase();
   });
 
-  if (!found) {
-    return { description: '', hourlyRate: 0, qtyRate: 0, defaultRate: 0 };
-  }
+  if (!found) return { description: '', hourlyRate: 0, qtyRate: 0, defaultRate: 0 };
 
   return {
     description: found.description || '',
@@ -980,15 +889,9 @@ async function testJobTypes() {
     const data = await apiRequest('getJobTypes');
     const list = Array.isArray(data) ? data : [];
     jobTypes = list;
-    window.jobTypes = jobTypes;
-    window.jobTypes = jobTypes;
-
-    alert(
-      'Job Types loaded: ' + list.length + '\n\n' +
-      list.map(function(j) {
-        return j.name + ' | Hourly: ' + j.hourlyRate + ' | Qty: ' + j.qtyRate;
-      }).join('\n')
-    );
+    alert('Job Types loaded: ' + list.length + '\n\n' + list.map(function(j) {
+      return j.name + ' | Hourly: ' + j.hourlyRate + ' | Qty: ' + j.qtyRate;
+    }).join('\n'));
   } catch (err) {
     alert('Job Types test failed: ' + err.message);
   } finally {

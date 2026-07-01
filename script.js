@@ -218,9 +218,9 @@ async function loadAppData() {
     const data = await apiRequest('getAppData');
 
     customers = data.customers || [];
-    jobTypes = normalizeJobTypesResponse(data.jobTypes);
+    jobTypes = Array.isArray(data.jobTypes) ? data.jobTypes : [];
     if (data.jobTypesError) console.warn(data.jobTypesError);
-    jobTypes = normalizeJobTypesResponse(data.jobTypes);
+    jobTypes = Array.isArray(data.jobTypes) ? data.jobTypes : [];
     invoices = data.invoices || [];
     invoiceCounter = data.nextInvoiceNumber || invoiceCounter;
     appSettings = data.settings || { invoiceEmail: '' };
@@ -718,43 +718,23 @@ function normalizeJobTypesResponse(value) {
   return [];
 }
 
-function getJobTypeDefaults(typeName) {
-  const found = (jobTypes || []).find(j => {
-    const name = typeof j === 'string' ? j : (j.name || j.jobType || '');
-    return String(name).toLowerCase() === String(typeName || '').toLowerCase();
-  });
 
-  if (!found || typeof found === 'string') {
-    return { defaultRate: 0, hourlyRate: 0, qtyRate: 0 };
-  }
-
-  return {
-    defaultRate: Number(found.defaultRate || 0),
-    hourlyRate: Number(found.hourlyRate || found.defaultRate || 0),
-    qtyRate: Number(found.qtyRate || found.defaultRate || 0)
-  };
-}
 
 function buildJobTypeOptions(selected) {
-  const types = Array.isArray(jobTypes) ? jobTypes : [];
+  const list = Array.isArray(jobTypes) ? jobTypes : [];
 
-  const activeTypes = types
-    .filter(j => {
-      const active = typeof j === 'string' ? true : String(j.active || 'TRUE').toLowerCase() !== 'false';
-      const name = typeof j === 'string' ? j : (j.name || j.jobType || '');
-      return active && String(name || '').trim();
-    });
-
-  if (!activeTypes.length) {
-    return `<option value="Repair">Repair</option><option value="Washing">Washing</option>`;
+  if (!list.length) {
+    return '<option value="Wash">Wash</option><option value="Repair">Repair</option><option value="Parts / Materials">Parts / Materials</option><option value="Other">Other</option>';
   }
 
-  return activeTypes.map(j => {
-    const name = typeof j === 'string' ? j : (j.name || j.jobType || '');
-    const selectedText = String(name).toLowerCase() === String(selected || '').toLowerCase() ? 'selected' : '';
-    return `<option value="${escapeAttr(name)}" ${selectedText}>${name}</option>`;
+  return list.map(j => {
+    const name = j.name || j.jobType || '';
+    if (!name) return '';
+    const isSelected = String(name).toLowerCase() === String(selected || '').toLowerCase() ? 'selected' : '';
+    return `<option value="${escapeAttr(name)}" ${isSelected}>${name}</option>`;
   }).join('');
 }
+
 
 
 
@@ -841,6 +821,22 @@ function addJob(data={}){const list=document.getElementById('jobsList');if(!list
   prepareTimeAutoCalcFields(div);div.querySelector('.job-type').value=data.jobType||currentJobType||'Wash';jobTypeChanged(div.querySelector('.job-type'),true);calculateInvoiceTotal();}
 function removeJob(btn){const b=btn.closest('.job-block');if(b)b.remove();renumberJobs();calculateInvoiceTotal();}
 function renumberJobs(){document.querySelectorAll('.job-block').forEach((b,i)=>{const t=b.querySelector('.job-block-head span');if(t)t.innerText='Job / Machine '+(i+1);});}
+function getJobTypeDefaults(typeName) {
+  const found = (jobTypes || []).find(j => {
+    const name = j.name || j.jobType || '';
+    return String(name).toLowerCase() === String(typeName || '').toLowerCase();
+  });
+
+  if (!found) return { hourlyRate: 0, qtyRate: 0, defaultRate: 0, description: '' };
+
+  return {
+    hourlyRate: Number(found.hourlyRate || 0),
+    qtyRate: Number(found.qtyRate || 0),
+    defaultRate: Number(found.defaultRate || found.hourlyRate || found.qtyRate || 0),
+    description: found.description || ''
+  };
+}
+
 function jobTypeChanged(sel,skip=false){const b=sel.closest('.job-block');if(!b)return;const type=sel.value,qty=b.querySelector('.job-qty'),qr=b.querySelector('.job-qty-rate'),hrs=b.querySelector('.job-hours'),hr=b.querySelector('.job-hour-rate');if(type==='Wash'){if(!qty.value||Number(qty.value)===0)qty.value=1;if(!hrs.value)hrs.value=0;if(!hr.value)hr.value=0;}if(type==='Repair'){if(!hrs.value||Number(hrs.value)===0)hrs.value=1;if(!hr.value||Number(hr.value)===0)hr.value=150;}if(!skip)calculateInvoiceTotal();}
 function calculateTimeHours(start,end){if(!start||!end)return 0;const [sh,sm]=start.split(':').map(Number),[eh,em]=end.split(':').map(Number);if(isNaN(sh)||isNaN(eh))return 0;let s=sh*60+(sm||0),e=eh*60+(em||0);if(e<s)e+=1440;return Math.round(((e-s)/60)*100)/100;}
 function collectJobs(){return [...document.querySelectorAll('.job-block')].map(b=>{const start=b.querySelector('.start-time').value||'',end=b.querySelector('.end-time').value||'',timeHours=calculateTimeHours(start,end);let hours=Number(b.querySelector('.job-hours').value||0);if(timeHours>0&&hours===0){hours=timeHours;b.querySelector('.job-hours').value=hours;}const qty=Number(b.querySelector('.job-qty').value||0),qtyRate=Number(b.querySelector('.job-qty-rate').value||0),hourRate=Number(b.querySelector('.job-hour-rate').value||0),materials=Number(b.querySelector('.job-materials').value||0);return{jobType:b.querySelector('.job-type').value||'',equipment:b.querySelector('.equipment-name').value||'',vin:b.querySelector('.vin-number').value||'',startTime:start,endTime:end,timeHours,qty,qtyRate,qtyAmount:qty*qtyRate,hours,hourRate,laborAmount:hours*hourRate,materials,description:b.querySelector('.job-description').value||'',total:(qty*qtyRate)+(hours*hourRate)+materials};});}

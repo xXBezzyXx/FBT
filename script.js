@@ -422,15 +422,6 @@ async function togglePaidFromAll(invoiceNumber) {
 
 
 
-function getDefaultRateForJobType(typeName) {
-  const found = (jobTypes || []).find(j => {
-    const name = typeof j === 'string' ? j : (j.name || j.jobType || '');
-    return String(name).toLowerCase() === String(typeName || '').toLowerCase();
-  });
-
-  if (!found || typeof found === 'string') return 0;
-  return Number(found.defaultRate || 0);
-}
 
 function getJobTypeIcon(type) {
   const text = String(type || '').toLowerCase();
@@ -720,10 +711,28 @@ if (isLoggedIn()) loadAppData();
 function escapeAttr(value){return String(value||'').replace(/"/g,'&quot;');}
 function escapeHtmlText(value){return String(value||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
+
 function normalizeJobTypesResponse(value) {
   if (Array.isArray(value)) return value;
   if (value && Array.isArray(value.jobTypes)) return value.jobTypes;
   return [];
+}
+
+function getJobTypeDefaults(typeName) {
+  const found = (jobTypes || []).find(j => {
+    const name = typeof j === 'string' ? j : (j.name || j.jobType || '');
+    return String(name).toLowerCase() === String(typeName || '').toLowerCase();
+  });
+
+  if (!found || typeof found === 'string') {
+    return { defaultRate: 0, hourlyRate: 0, qtyRate: 0 };
+  }
+
+  return {
+    defaultRate: Number(found.defaultRate || 0),
+    hourlyRate: Number(found.hourlyRate || found.defaultRate || 0),
+    qtyRate: Number(found.qtyRate || found.defaultRate || 0)
+  };
 }
 
 function buildJobTypeOptions(selected) {
@@ -740,14 +749,13 @@ function buildJobTypeOptions(selected) {
     return `<option value="Repair">Repair</option><option value="Washing">Washing</option>`;
   }
 
-  return activeTypes
-    .map(j => {
-      const name = typeof j === 'string' ? j : (j.name || j.jobType || '');
-      const selectedText = String(name).toLowerCase() === String(selected || '').toLowerCase() ? 'selected' : '';
-      return `<option value="${escapeAttr(name)}" ${selectedText}>${name}</option>`;
-    })
-    .join('');
+  return activeTypes.map(j => {
+    const name = typeof j === 'string' ? j : (j.name || j.jobType || '');
+    const selectedText = String(name).toLowerCase() === String(selected || '').toLowerCase() ? 'selected' : '';
+    return `<option value="${escapeAttr(name)}" ${selectedText}>${name}</option>`;
+  }).join('');
 }
+
 
 
 

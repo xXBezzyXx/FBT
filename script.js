@@ -1,5 +1,18 @@
-// Guaranteed global app data variables
+// Guaranteed global app data variables - must stay at top
+var selectedCustomer = window.selectedCustomer || '';
+var currentJobType = window.currentJobType || '';
+var invoiceCounter = window.invoiceCounter || 1013;
+var currentCreatedInvoiceNumber = window.currentCreatedInvoiceNumber || '';
+var customers = window.customers || [];
+var invoices = window.invoices || [];
 var jobTypes = window.jobTypes || [];
+
+window.selectedCustomer = selectedCustomer;
+window.currentJobType = currentJobType;
+window.invoiceCounter = invoiceCounter;
+window.currentCreatedInvoiceNumber = currentCreatedInvoiceNumber;
+window.customers = customers;
+window.invoices = invoices;
 window.jobTypes = jobTypes;
 
 // Guaranteed global Settings helper
@@ -217,9 +230,12 @@ async function loadAppData() {
     const data = await apiRequest('getAppData');
 
     customers = data.customers || [];
+    window.customers = customers;
     jobTypes = Array.isArray(data.jobTypes) ? data.jobTypes : [];
     window.jobTypes = jobTypes;
+    window.jobTypes = jobTypes;
     invoices = data.invoices || [];
+    window.invoices = invoices;
     invoiceCounter = data.nextInvoiceNumber || invoiceCounter;
     appSettings = data.settings || { invoiceEmail: '' };
     window.appSettings = appSettings;
@@ -238,14 +254,7 @@ async function loadAppData() {
 }
 
 
-let selectedCustomer = '';
-let currentJobType = '';
-let invoiceCounter = 1013;
-let currentCreatedInvoiceNumber = '';
 appSettings = window.appSettings || { invoiceEmail: '' };
-
-let customers = [];
-let invoices = [];
 
 function money(value) {
   return '$' + Number(value || 0).toLocaleString(undefined, {
@@ -971,6 +980,7 @@ async function testJobTypes() {
     const data = await apiRequest('getJobTypes');
     const list = Array.isArray(data) ? data : [];
     jobTypes = list;
+    window.jobTypes = jobTypes;
     window.jobTypes = jobTypes;
 
     alert(

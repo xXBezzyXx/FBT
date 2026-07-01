@@ -693,7 +693,7 @@ function escapeAttr(value){return String(value||'').replace(/"/g,'&quot;');}
 function escapeHtmlText(value){return String(value||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 function buildJobTypeOptions(selected) {
-  return (jobTypes || ['Wash', 'Repair', 'Parts / Materials', 'Other'])
+  return (jobTypes || ['Washing', 'Ship Work', 'Repair', 'Equipment Lift', 'Parts / Materials', 'Other'])
     .map(type => `<option value="${escapeAttr(type)}" ${type === selected ? 'selected' : ''}>${type}</option>`)
     .join('');
 }

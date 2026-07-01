@@ -1,12 +1,7 @@
 // Guaranteed global Settings helper
 var appSettings = window.appSettings || { invoiceEmail: '' };
 
-window.fillSettingsForm = 
-async function reloadJobTypesNow() {
-  await loadAppData();
-}
-
-function fillSettingsForm() {
+window.fillSettingsForm = function fillSettingsForm() {
   var emailInput = document.getElementById('settingInvoiceEmail');
   if (emailInput) {
     var settings = window.appSettings || appSettings || { invoiceEmail: '' };
@@ -218,12 +213,10 @@ async function loadAppData() {
     const data = await apiRequest('getAppData');
 
     customers = data.customers || [];
-    if (data.jobTypesError) console.warn(data.jobTypesError);
+    jobTypes = Array.isArray(data.jobTypes) ? data.jobTypes : [];
     invoices = data.invoices || [];
-    setJobTypesFromData(data);
     invoiceCounter = data.nextInvoiceNumber || invoiceCounter;
     appSettings = data.settings || { invoiceEmail: '' };
-    window.appSettings = appSettings;
     window.appSettings = appSettings;
     fillSettingsForm();
 
@@ -238,6 +231,7 @@ async function loadAppData() {
     hideLoading();
   }
 }
+
 
 let selectedCustomer = '';
 let currentJobType = '';
@@ -421,6 +415,11 @@ async function togglePaidFromAll(invoiceNumber) {
 
 
 
+function getDefaultRateForJobType(typeName) {
+  const defaults = getJobTypeDefaults(typeName);
+  return defaults.defaultRate || 0;
+}
+
 
 function getJobTypeIcon(type) {
   const text = String(type || '').toLowerCase();
@@ -522,27 +521,36 @@ function customCustomer() {
 function openForm(type) {
   currentJobType = type || 'Repair';
 
-  document.getElementById('formCustomer').value = selectedCustomer || 'Custom Customer';
-  document.getElementById('billingCompany').value = selectedCustomer || '';
-  document.getElementById('billingName').value = '';
-  document.getElementById('billingAddress').value = '';
-  document.getElementById('billingCity').value = '';
-  document.getElementById('billingState').value = '';
-  document.getElementById('billingZip').value = '';
-  document.getElementById('shipField').classList.toggle('hidden', type !== 'Ship Work');
+  const formCustomer = document.getElementById('formCustomer');
+  const billingCompany = document.getElementById('billingCompany');
+  const billingName = document.getElementById('billingName');
+  const billingAddress = document.getElementById('billingAddress');
+  const billingCity = document.getElementById('billingCity');
+  const billingState = document.getElementById('billingState');
+  const billingZip = document.getElementById('billingZip');
+  const notes = document.getElementById('notes');
+  const totalAmount = document.getElementById('totalAmount');
 
-  document.getElementById('referenceNumber').value = '';
-  document.getElementById('jobLocation').value = '';
-  document.getElementById('workPerformed').value = '';
-  document.getElementById('hours').value = 1;
-  document.getElementById('rate').value = type === 'Ship Work' ? 150 : 100;
-  document.getElementById('materials').value = 0;
-  document.getElementById('notes').value = '';
+  if (formCustomer) formCustomer.value = selectedCustomer || 'Custom Customer';
+  if (billingCompany) billingCompany.value = selectedCustomer || '';
+  if (billingName) billingName.value = '';
+  if (billingAddress) billingAddress.value = '';
+  if (billingCity) billingCity.value = '';
+  if (billingState) billingState.value = '';
+  if (billingZip) billingZip.value = '';
+  if (notes) notes.value = '';
+  if (totalAmount) totalAmount.value = '0.00';
 
-  calculateTotal();
+  const jobsList = document.getElementById('jobsList');
+  if (jobsList) jobsList.innerHTML = '';
+
+  addJob({ jobType: currentJobType });
+
+  calculateInvoiceTotal();
   showPage('invoiceForm');
   document.getElementById('pageTitle').innerText = 'Invoice Maker';
 }
+
 
 function calculateTotal() {
   const hours = Number(document.getElementById('hours').value || 0);
@@ -625,35 +633,6 @@ async function markLastPaid() {
   showPage('dashboard');
 }
 
-
-function goBack() {
-  const activePage = document.querySelector('.page.active');
-  const activeId = activePage ? activePage.id : '';
-
-  if (activeId === 'invoiceForm') {
-    renderCustomers();
-    showPage('customers');
-    return;
-  }
-
-  if (activeId === 'customers') {
-    showPage('dashboard');
-    return;
-  }
-
-  if (activeId === 'created') {
-    showPage('dashboard');
-    return;
-  }
-
-  if (activeId === 'allInvoices' || activeId === 'settings') {
-    showPage('dashboard');
-    return;
-  }
-
-  showPage('dashboard');
-}
-
 function showPage(pageId) {
   document.querySelectorAll('.page').forEach(page => {
     page.classList.remove('active');
@@ -691,6 +670,22 @@ function showPage(pageId) {
   if (pageId === 'settings') fillSettingsForm();
 }
 
+function goBack() {
+  const active = document.querySelector('.page.active').id;
+
+  if (active === 'customers') {
+    showPage('dashboard');
+  } else if (active === 'invoiceForm') {
+    renderCustomers();
+    showPage('customers');
+  } else if (active === 'created') {
+    showPage('dashboard');
+  } else if (active === 'allInvoices' || active === 'settings') {
+    showPage('dashboard');
+  } else {
+    showPage('dashboard');
+  }
+}
 
 
 
@@ -710,14 +705,20 @@ if (isLoggedIn()) loadAppData();
 function escapeAttr(value){return String(value||'').replace(/"/g,'&quot;');}
 function escapeHtmlText(value){return String(value||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
+function buildJobTypeOptions(selected) {
+  const list = Array.isArray(jobTypes) ? jobTypes : [];
 
+  if (!list.length) {
+    return '<option value="Wash">Wash</option><option value="Repair">Repair</option><option value="Parts / Materials">Parts / Materials</option><option value="Other">Other</option>';
+  }
 
-
-
-
-
-
-
+  return list.map(function(job) {
+    const name = job.name || job.jobType || '';
+    if (!name) return '';
+    const selectedText = String(name).toLowerCase() === String(selected || '').toLowerCase() ? 'selected' : '';
+    return '<option value="' + escapeAttr(name) + '" ' + selectedText + '>' + name + '</option>';
+  }).join('');
+}
 
 
 
@@ -797,99 +798,141 @@ function prepareTimeAutoCalcFields(block) {
   }
 }
 
+function addJob(data = {}) {
+  const list = document.getElementById('jobsList');
+  if (!list) return;
 
-function setJobTypesFromData(data) {
-  jobTypesDebug = data.jobTypesDebug || null;
+  const idx = list.children.length + 1;
+  const div = document.createElement('div');
+  div.className = 'job-block';
+
+  const selectedType = data.jobType || currentJobType || 'Repair';
+
+  div.innerHTML = `
+    <div class="job-block-head">
+      <span>Job / Machine ${idx}</span>
+      <button class="job-remove-btn" onclick="removeJob(this)">Remove</button>
+    </div>
+    <div class="job-block-body">
+      <div class="field">
+        <label>Job Type</label>
+        <select class="job-type" onchange="jobTypeChanged(this); calculateInvoiceTotal();">
+          ${buildJobTypeOptions(selectedType)}
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Equipment / Machine</label>
+        <input class="equipment-name" type="text" placeholder="Excavator, loader, dozer, etc." value="${escapeAttr(data.equipment || '')}" oninput="calculateInvoiceTotal()">
+      </div>
+
+      <div class="field">
+        <label>VIN / Serial Number</label>
+        <input class="vin-number" type="text" placeholder="VIN / SN" value="${escapeAttr(data.vin || '')}" oninput="calculateInvoiceTotal()">
+      </div>
+
+      <div class="two-col">
+        <div class="field">
+          <label>Start Time</label>
+          <input class="start-time" type="time" value="${escapeAttr(data.startTime || '')}" onchange="handleTimeChange(this)">
+        </div>
+        <div class="field">
+          <label>End Time</label>
+          <input class="end-time" type="time" value="${escapeAttr(data.endTime || '')}" onchange="handleTimeChange(this)">
+        </div>
+      </div>
+
+      <div class="job-help">
+        Wash jobs can be billed by equipment/quantity. Repair jobs can use both quantity and labor hours.
+      </div>
+
+      <div class="two-col">
+        <div class="field">
+          <label>Qty / Equipment Count</label>
+          <input class="job-qty" type="number" value="${data.qty ?? 1}" min="0" step="0.01" oninput="calculateInvoiceTotal()">
+        </div>
+        <div class="field">
+          <label>Qty Rate</label>
+          <input class="job-qty-rate" type="number" value="${data.qtyRate ?? 0}" min="0" step="0.01" oninput="calculateInvoiceTotal()">
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="field">
+          <label>Labor Hours</label>
+          <input class="job-hours" type="number" value="${data.hours ?? 0}" min="0" step="0.01" oninput="handleHoursManualEdit(this)">
+        </div>
+        <div class="field">
+          <label>Hourly Rate</label>
+          <input class="job-hour-rate" type="number" value="${data.hourRate ?? 0}" min="0" step="0.01" oninput="calculateInvoiceTotal()">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Parts / Materials</label>
+        <input class="job-materials" type="number" value="${data.materials ?? 0}" min="0" step="0.01" oninput="calculateInvoiceTotal()">
+      </div>
+
+      <div class="field">
+        <label>Work Description</label>
+        <textarea class="job-description" placeholder="Describe wash, repairs, parts, findings, etc." oninput="calculateInvoiceTotal()">${escapeHtmlText(data.description || '')}</textarea>
+      </div>
+
+      <div class="job-total-pill">
+        <span>Job Total</span>
+        <span class="job-total">$0.00</span>
+      </div>
+    </div>
+  `;
+
+  list.appendChild(div);
+  prepareTimeAutoCalcFields(div);
+
+  const typeSelect = div.querySelector('.job-type');
+  typeSelect.value = selectedType;
+  jobTypeChanged(typeSelect, true);
+
+  calculateInvoiceTotal();
 }
-
-function buildJobTypeOptions(selected) {
-  const list = Array.isArray(jobTypes) ? jobTypes : [];
-
-  if (!list.length) {
-    return '<option value="Wash">Wash</option><option value="Repair">Repair</option><option value="Parts / Materials">Parts / Materials</option><option value="Other">Other</option>';
-  }
-
-  return list.map(function(j) {
-    const name = j.name || '';
-    if (!name) return '';
-    const isSelected = String(name).toLowerCase() === String(selected || '').toLowerCase() ? 'selected' : '';
-    return '<option value="' + escapeAttr(name) + '" ' + isSelected + '>' + name + '</option>';
-  }).join('');
-}
-
-function getJobTypeDefaults(typeName) {
-  const found = (jobTypes || []).find(function(j) {
-    return String(j.name || '').toLowerCase() === String(typeName || '').toLowerCase();
-  });
-
-  if (!found) return { hourlyRate: 0, qtyRate: 0, defaultRate: 0, description: '' };
-
-  return {
-    hourlyRate: Number(found.hourlyRate || 0),
-    qtyRate: Number(found.qtyRate || 0),
-    defaultRate: Number(found.defaultRate || found.hourlyRate || found.qtyRate || 0),
-    description: found.description || ''
-  };
-}
-
-async function testJobTypes() {
-  try {
-    showLoading('Testing Job Types...');
-    const result = await apiRequest('getJobTypes');
-
-    const list = result && result.jobTypes ? result.jobTypes : [];
-    jobTypes = list;
-    jobTypesDebug = result;
-
-    alert(
-      'Job Types Test\\n' +
-      'Sheet: ' + (result.sheetName || 'NOT FOUND') + '\\n' +
-      'Count: ' + (result.count || 0) + '\\n' +
-      'Error: ' + (result.error || 'none') + '\\n\\n' +
-      list.map(function(j) {
-        return j.name + ' | Hourly: ' + j.hourlyRate + ' | Qty: ' + j.qtyRate;
-      }).join('\\n')
-    );
-  } catch (err) {
-    alert('Job Types test failed: ' + err.message);
-  } finally {
-    hideLoading();
-  }
-}
-
-function addJob(data={}){const list=document.getElementById('jobsList');if(!list)return;const idx=list.children.length+1;const div=document.createElement('div');div.className='job-block';div.innerHTML=`<div class="job-block-head"><span>Job / Machine ${idx}</span><button class="job-remove-btn" onclick="removeJob(this)">Remove</button></div><div class="job-block-body"><div class="field"><label>Job Type</label><select class="job-type" onchange="jobTypeChanged(this);calculateInvoiceTotal();"><option value="Wash">Wash</option><option value="Repair">Repair</option><option value="Parts">Parts / Materials</option><option value="Other">Other</option></select></div><div class="field"><label>Equipment / Machine</label><input class="equipment-name" type="text" placeholder="Excavator, loader, dozer, etc." value="${escapeAttr(data.equipment||'')}" oninput="calculateInvoiceTotal()"></div><div class="field"><label>VIN / Serial Number</label><input class="vin-number" type="text" placeholder="VIN / SN" value="${escapeAttr(data.vin||'')}" oninput="calculateInvoiceTotal()"></div><div class="two-col"><div class="field"><label>Start Time</label><input class="start-time" type="time" value="${escapeAttr(data.startTime||'')}" onchange="calculateInvoiceTotal()"></div><div class="field"><label>End Time</label><input class="end-time" type="time" value="${escapeAttr(data.endTime||'')}" onchange="calculateInvoiceTotal()"></div></div><div class="job-help">Wash jobs can be billed by equipment/quantity. Repair jobs can use both quantity and labor hours.</div><div class="two-col"><div class="field"><label>Qty / Equipment Count</label><input class="job-qty" type="number" value="${data.qty??1}" min="0" step="0.01" oninput="calculateInvoiceTotal()"></div><div class="field"><label>Qty Rate</label><input class="job-qty-rate" type="number" value="${data.qtyRate??0}" min="0" step="0.01" oninput="calculateInvoiceTotal()"></div></div><div class="two-col"><div class="field"><label>Labor Hours</label><input class="job-hours" type="number" value="${data.hours??0}" min="0" step="0.01" oninput="calculateInvoiceTotal()"></div><div class="field"><label>Hourly Rate</label><input class="job-hour-rate" type="number" value="${data.hourRate??0}" min="0" step="0.01" oninput="calculateInvoiceTotal()"></div></div><div class="field"><label>Parts / Materials</label><input class="job-materials" type="number" value="${data.materials??0}" min="0" step="0.01" oninput="calculateInvoiceTotal()"></div><div class="field"><label>Work Description</label><textarea class="job-description" placeholder="Describe wash, repairs, parts, findings, etc." oninput="calculateInvoiceTotal()">${escapeHtmlText(data.description||'')}</textarea></div><div class="job-total-pill"><span>Job Total</span><span class="job-total">$0.00</span></div></div>`;list.appendChild(div);
+){const list=document.getElementById('jobsList');if(!list)return;const idx=list.children.length+1;const div=document.createElement('div');div.className='job-block';div.innerHTML=`<div class="job-block-head"><span>Job / Machine ${idx}</span><button class="job-remove-btn" onclick="removeJob(this)">Remove</button></div><div class="job-block-body"><div class="field"><label>Job Type</label><select class="job-type" onchange="jobTypeChanged(this);calculateInvoiceTotal();"><option value="Wash">Wash</option><option value="Repair">Repair</option><option value="Parts">Parts / Materials</option><option value="Other">Other</option></select></div><div class="field"><label>Equipment / Machine</label><input class="equipment-name" type="text" placeholder="Excavator, loader, dozer, etc." value="${escapeAttr(data.equipment||'')}" oninput="calculateInvoiceTotal()"></div><div class="field"><label>VIN / Serial Number</label><input class="vin-number" type="text" placeholder="VIN / SN" value="${escapeAttr(data.vin||'')}" oninput="calculateInvoiceTotal()"></div><div class="two-col"><div class="field"><label>Start Time</label><input class="start-time" type="time" value="${escapeAttr(data.startTime||'')}" onchange="calculateInvoiceTotal()"></div><div class="field"><label>End Time</label><input class="end-time" type="time" value="${escapeAttr(data.endTime||'')}" onchange="calculateInvoiceTotal()"></div></div><div class="job-help">Wash jobs can be billed by equipment/quantity. Repair jobs can use both quantity and labor hours.</div><div class="two-col"><div class="field"><label>Qty / Equipment Count</label><input class="job-qty" type="number" value="${data.qty??1}" min="0" step="0.01" oninput="calculateInvoiceTotal()"></div><div class="field"><label>Qty Rate</label><input class="job-qty-rate" type="number" value="${data.qtyRate??0}" min="0" step="0.01" oninput="calculateInvoiceTotal()"></div></div><div class="two-col"><div class="field"><label>Labor Hours</label><input class="job-hours" type="number" value="${data.hours??0}" min="0" step="0.01" oninput="calculateInvoiceTotal()"></div><div class="field"><label>Hourly Rate</label><input class="job-hour-rate" type="number" value="${data.hourRate??0}" min="0" step="0.01" oninput="calculateInvoiceTotal()"></div></div><div class="field"><label>Parts / Materials</label><input class="job-materials" type="number" value="${data.materials??0}" min="0" step="0.01" oninput="calculateInvoiceTotal()"></div><div class="field"><label>Work Description</label><textarea class="job-description" placeholder="Describe wash, repairs, parts, findings, etc." oninput="calculateInvoiceTotal()">${escapeHtmlText(data.description||'')}</textarea></div><div class="job-total-pill"><span>Job Total</span><span class="job-total">$0.00</span></div></div>`;list.appendChild(div);
   prepareTimeAutoCalcFields(div);div.querySelector('.job-type').value=data.jobType||currentJobType||'Wash';jobTypeChanged(div.querySelector('.job-type'),true);calculateInvoiceTotal();}
 function removeJob(btn){const b=btn.closest('.job-block');if(b)b.remove();renumberJobs();calculateInvoiceTotal();}
 function renumberJobs(){document.querySelectorAll('.job-block').forEach((b,i)=>{const t=b.querySelector('.job-block-head span');if(t)t.innerText='Job / Machine '+(i+1);});}
-
-function jobTypeChanged(sel,skip=false){const b=sel.closest('.job-block');if(!b)return;const type=sel.value,qty=b.querySelector('.job-qty'),qr=b.querySelector('.job-qty-rate'),hrs=b.querySelector('.job-hours'),hr=b.querySelector('.job-hour-rate');if(type==='Wash'){if(!qty.value||Number(qty.value)===0)qty.value=1;if(!hrs.value)hrs.value=0;if(!hr.value)hr.value=0;}if(type==='Repair'){if(!hrs.value||Number(hrs.value)===0)hrs.value=1;if(!hr.value||Number(hr.value)===0)hr.value=150;}if(!skip)calculateInvoiceTotal();}
-function jobTypeChanged(select, skipCalc = false) {
-  const block = select.closest('.job-block');
+function jobTypeChanged(sel, skip = false) {
+  const block = sel.closest('.job-block');
   if (!block) return;
 
-  const type = select.value;
+  const type = sel.value;
   const defaults = getJobTypeDefaults(type);
 
   const qty = block.querySelector('.job-qty');
   const qtyRate = block.querySelector('.job-qty-rate');
-  const hours = block.querySelector('.job-hours');
+  const hrs = block.querySelector('.job-hours');
   const hourRate = block.querySelector('.job-hour-rate');
   const desc = block.querySelector('.job-description');
 
-  if (defaults.description && desc && !desc.value) desc.value = defaults.description;
-  if (defaults.hourlyRate && hourRate && (!hourRate.value || Number(hourRate.value) === 0)) hourRate.value = defaults.hourlyRate;
-  if (defaults.qtyRate && qtyRate && (!qtyRate.value || Number(qtyRate.value) === 0)) qtyRate.value = defaults.qtyRate;
+  if (defaults.description && desc && !desc.value) {
+    desc.value = defaults.description;
+  }
+
+  if (defaults.hourlyRate && hourRate && (!hourRate.value || Number(hourRate.value) === 0)) {
+    hourRate.value = defaults.hourlyRate;
+  }
+
+  if (defaults.qtyRate && qtyRate && (!qtyRate.value || Number(qtyRate.value) === 0)) {
+    qtyRate.value = defaults.qtyRate;
+  }
 
   const typeText = String(type || '').toLowerCase();
 
   if (typeText.includes('wash')) {
     if (qty && (!qty.value || Number(qty.value) === 0)) qty.value = 1;
-    if (hours && (!hours.value || Number(hours.value) === 0)) hours.value = 0;
-  } else {
-    if (hours && (!hours.value || Number(hours.value) === 0)) hours.value = 1;
+    if (hrs && (!hrs.value || Number(hrs.value) === 0)) hrs.value = 0;
+  } else if (typeText.includes('repair') || typeText.includes('labor') || typeText.includes('ship')) {
+    if (hrs && (!hrs.value || Number(hrs.value) === 0)) hrs.value = 1;
   }
 
-  if (!skipCalc) calculateInvoiceTotal();
+  if (!skip) calculateInvoiceTotal();
 }
 
 function calculateTimeHours(start,end){if(!start||!end)return 0;const [sh,sm]=start.split(':').map(Number),[eh,em]=end.split(':').map(Number);if(isNaN(sh)||isNaN(eh))return 0;let s=sh*60+(sm||0),e=eh*60+(em||0);if(e<s)e+=1440;return Math.round(((e-s)/60)*100)/100;}
@@ -898,3 +941,45 @@ function calculateInvoiceTotal(){let total=0;const jobs=collectJobs();jobs.forEa
 function calculateTotal(){calculateInvoiceTotal();}
 function openForm(type){currentJobType=type;document.getElementById('formCustomer').value=selectedCustomer||'Custom Customer';document.getElementById('billingCompany').value=selectedCustomer||'';document.getElementById('billingName').value='';document.getElementById('billingAddress').value='';document.getElementById('billingCity').value='';document.getElementById('billingState').value='';document.getElementById('billingZip').value='';document.getElementById('notes').value='';document.getElementById('jobsList').innerHTML='';if(type==='Washing'){addJob({jobType:'Wash',qty:1,qtyRate:0,hours:0,hourRate:0,materials:0,description:'Equipment wash'});}else{addJob({jobType:'Repair',qty:0,qtyRate:0,hours:1,hourRate:150,materials:0,description:'Repair work'});}showPage('invoiceForm');}
 async function createInvoice(){const jobs=collectJobs();const total=calculateInvoiceTotal();const customer=document.getElementById('formCustomer').value||selectedCustomer||'Custom Customer';const isoDate=new Date().toISOString().slice(0,10);const inv={number:'INV-'+invoiceCounter,customer,billingCompany:document.getElementById('billingCompany').value||customer,billingName:document.getElementById('billingName').value||'',billingAddress:document.getElementById('billingAddress').value||'',billingCity:document.getElementById('billingCity').value||'',billingState:document.getElementById('billingState').value||'',billingZip:document.getElementById('billingZip').value||'',referenceNumber:jobs.map(j=>[j.equipment,j.vin?'VIN/SN: '+j.vin:''].filter(Boolean).join(' | ')).filter(Boolean).join(' / '),jobType:jobs.map(j=>j.jobType).filter(Boolean).join(' + ')||currentJobType,vessel:'',location:'',workPerformed:jobs.map(j=>{const p=[];if(j.equipment)p.push('Equipment: '+j.equipment);if(j.vin)p.push('VIN/SN: '+j.vin);if(j.startTime||j.endTime)p.push('Time: '+(j.startTime||'')+' - '+(j.endTime||''));if(j.description)p.push(j.description);return p.join('\n');}).join('\n\n'),hours:jobs.reduce((s,j)=>s+Number(j.hours||0),0),rate:jobs[0]?.hourRate||0,materials:jobs.reduce((s,j)=>s+Number(j.materials||0),0),total,paid:false,date:isoDate,notes:document.getElementById('notes').value||'',jobs};try{showLoading('Saving invoice...');const saved=await apiRequest('saveInvoice',inv);invoices.unshift(saved);invoiceCounter++;currentCreatedInvoiceNumber=saved.number;document.getElementById('createdNumber').innerText=saved.number;document.getElementById('createdCustomer').innerText=saved.customer;document.getElementById('createdTotal').innerText=money(saved.total);document.getElementById('createdStatus').innerText=saved.paid?'Paid':'Unpaid';renderInvoices();renderAllInvoices();showPage('created');}catch(err){alert('Could not save invoice: '+err.message);}finally{hideLoading();}}
+
+
+function getJobTypeDefaults(typeName) {
+  const found = (jobTypes || []).find(function(job) {
+    const name = job.name || job.jobType || '';
+    return String(name).toLowerCase() === String(typeName || '').toLowerCase();
+  });
+
+  if (!found) {
+    return { description: '', hourlyRate: 0, qtyRate: 0, defaultRate: 0 };
+  }
+
+  return {
+    description: found.description || '',
+    hourlyRate: Number(found.hourlyRate || 0),
+    qtyRate: Number(found.qtyRate || 0),
+    defaultRate: Number(found.defaultRate || found.hourlyRate || found.qtyRate || 0)
+  };
+}
+
+
+
+async function testJobTypes() {
+  try {
+    showLoading('Testing Job Types...');
+    const data = await apiRequest('getJobTypes');
+    const list = Array.isArray(data) ? data : [];
+    jobTypes = list;
+
+    alert(
+      'Job Types loaded: ' + list.length + '\n\n' +
+      list.map(function(j) {
+        return j.name + ' | Hourly: ' + j.hourlyRate + ' | Qty: ' + j.qtyRate;
+      }).join('\n')
+    );
+  } catch (err) {
+    alert('Job Types test failed: ' + err.message);
+  } finally {
+    hideLoading();
+  }
+}
+

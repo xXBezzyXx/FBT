@@ -628,6 +628,35 @@ async function markLastPaid() {
   showPage('dashboard');
 }
 
+
+function goBack() {
+  const activePage = document.querySelector('.page.active');
+  const activeId = activePage ? activePage.id : '';
+
+  if (activeId === 'invoiceForm') {
+    renderCustomers();
+    showPage('customers');
+    return;
+  }
+
+  if (activeId === 'customers') {
+    showPage('dashboard');
+    return;
+  }
+
+  if (activeId === 'created') {
+    showPage('dashboard');
+    return;
+  }
+
+  if (activeId === 'allInvoices' || activeId === 'settings') {
+    showPage('dashboard');
+    return;
+  }
+
+  showPage('dashboard');
+}
+
 function showPage(pageId) {
   document.querySelectorAll('.page').forEach(page => {
     page.classList.remove('active');
@@ -665,15 +694,7 @@ function showPage(pageId) {
   if (pageId === 'settings') fillSettingsForm();
 }
 
-function goBack() {
-  const active = document.querySelector('.page.active').id;
 
-  if (active === 'customers') showPage('dashboard');
-  else if (active === 'jobType') showPage('customers');
-  else if (active === 'invoiceForm') openForm('Repair');
-  else if (active === 'created') showPage('dashboard');
-  else showPage('dashboard');
-}
 
 
 

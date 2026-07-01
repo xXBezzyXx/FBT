@@ -240,7 +240,7 @@ let currentCreatedInvoiceNumber = '';
 appSettings = window.appSettings || { invoiceEmail: '' };
 
 let customers = [];
-let jobTypes = ['Wash', 'Repair', 'Parts / Materials', 'Other'];
+let jobTypes = ['Washing', 'Ship Work', 'Repair', 'Equipment Lift', 'Parts / Materials', 'Other'];
 
 let invoices = [];
 
@@ -523,7 +523,7 @@ function customCustomer() {
 }
 
 function openForm(type) {
-  currentJobType = type || 'Repair';
+  currentJobType = type || 'Washing';
 
   document.getElementById('formCustomer').value = selectedCustomer || 'Custom Customer';
   document.getElementById('billingCompany').value = selectedCustomer || '';

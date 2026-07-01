@@ -1,3 +1,7 @@
+// Guaranteed global app data variables
+var jobTypes = window.jobTypes || [];
+window.jobTypes = jobTypes;
+
 // Guaranteed global Settings helper
 var appSettings = window.appSettings || { invoiceEmail: '' };
 
@@ -214,6 +218,7 @@ async function loadAppData() {
 
     customers = data.customers || [];
     jobTypes = Array.isArray(data.jobTypes) ? data.jobTypes : [];
+    window.jobTypes = jobTypes;
     invoices = data.invoices || [];
     invoiceCounter = data.nextInvoiceNumber || invoiceCounter;
     appSettings = data.settings || { invoiceEmail: '' };
@@ -240,8 +245,6 @@ let currentCreatedInvoiceNumber = '';
 appSettings = window.appSettings || { invoiceEmail: '' };
 
 let customers = [];
-let jobTypes = ['Wash', 'Repair', 'Parts / Materials', 'Other'];
-
 let invoices = [];
 
 function money(value) {
@@ -968,6 +971,7 @@ async function testJobTypes() {
     const data = await apiRequest('getJobTypes');
     const list = Array.isArray(data) ? data : [];
     jobTypes = list;
+    window.jobTypes = jobTypes;
 
     alert(
       'Job Types loaded: ' + list.length + '\n\n' +

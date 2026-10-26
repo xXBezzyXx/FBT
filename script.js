@@ -138,7 +138,6 @@ async function saveSettings() {
     showLoading('Saving settings...');
     const letterhead={}; LETTERHEAD_KEYS.forEach(k => { const el=document.getElementById('lh_'+k); if(el) letterhead[k]=el.value; });
     appSettings = await apiRequest('saveSettings', { invoiceEmail, letterhead });
-    await syncInvoiceLogo();
     fillSettingsForm();
     alert('Settings saved.');
   } catch (err) {
@@ -155,7 +154,6 @@ async function loadAppData() {
   try {
     showLoading('Loading invoices...');
     const data = await apiRequest('getAppData');
-    await syncInvoiceLogo();
 
     customers = data.customers || [];
     invoices = data.invoices || [];

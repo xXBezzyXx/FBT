@@ -702,20 +702,20 @@ function authorizeApp() {
   return 'Authorization complete.';
 }
 
+// Always retrieve the company logo directly from GitHub, without a saved URL.
 function getLetterheadLogoForPdf_(lh) {
-  const url = String(lh.logoUrl || '').trim();
-  if (url) {
-    if (!/^https:\/\//i.test(url)) return '';
+  const urls = [
+    'https://raw.githubusercontent.com/xXBezzyXx/FBT/main/images/logo.png',
+    'https://xxbezzyxx.github.io/FBT/images/logo.png'
+  ];
+  for (const url of urls) {
     try {
       const response = UrlFetchApp.fetch(url, {muteHttpExceptions:true, followRedirects:true});
-      if (response.getResponseCode() !== 200) return '';
-      const blob = response.getBlob();
-      const mime = String(blob.getContentType() || '').split(';')[0].toLowerCase();
-      if (['image/png','image/jpeg','image/gif','image/webp'].indexOf(mime) < 0) return '';
-      const bytes = blob.getBytes();
-      if (bytes.length > 2 * 1024 * 1024) return '';
-      return 'data:' + mime + ';base64,' + Utilities.base64Encode(bytes);
-    } catch(e) { return ''; }
+      if (response.getResponseCode() !== 200) continue;
+      const bytes = response.getBlob().getBytes();
+      if (!bytes.length || bytes.length > 10 * 1024 * 1024) continue;
+      return 'data:image/png;base64,' + Utilities.base64Encode(bytes);
+    } catch (e) { console.error('Invoice logo fetch failed: ' + e.message); }
   }
   return lh.logoDataUrl || '';
 }

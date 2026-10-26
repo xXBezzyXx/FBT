@@ -349,7 +349,8 @@ function generateInvoicePdf(invoiceNumber) {
 function buildFbtInvoiceHtml_(invoice) {
   const lh = getSettings().letterhead;
   const safe = function(v) { return escapeHtml_(String(v || "")); };
-  const logoMarkup = lh.logoDataUrl ? `<img src="${lh.logoDataUrl}" style="max-width:95px;max-height:75px;object-fit:contain"/>` : "▰";
+  const logoData = getLetterheadLogoForPdf_(lh);
+  const logoMarkup = logoData ? `<img src="${logoData}" style="max-width:95px;max-height:75px;object-fit:contain"/>` : "▰";
   const labor = Number(invoice.hours || 0) * Number(invoice.rate || 0);
   const materials = Number(invoice.materials || 0);
   const grandTotal = Number(invoice.total || (labor + materials));
@@ -522,7 +523,7 @@ Routing # 067014822`;
 }
 
 function letterheadDefaults_() { return DEFAULT_LETTERHEAD_; }
-const DEFAULT_LETTERHEAD_ = {"companyName": "FBT EQUIPMENT", "tagline": "HEAVY EQUIPMENT REPAIR & CLEANING", "streetAddress": "11236 Allen Acers Rd", "cityStateZip": "MacClenny FL 32063", "registration": "Florida Registration # MV74817", "phone": "C-904-881-0448", "fax": "904653-0448", "companyEmail": "FBTEQUIPMENTLLC@GMAIL.COM", "website": "", "warning": "No Machine will be released without Payment !!!", "shippingCompany": "FBT EQUIPMENT LLC", "shippingContact": "${safe(lh.shippingContact)}", "shippingStreet": "${safe(lh.shippingStreet)}", "shippingCityStateZip": "${safe(lh.shippingCityStateZip)}", "headerColor": "#001cff"};
+const DEFAULT_LETTERHEAD_ = {"companyName": "FBT EQUIPMENT", "tagline": "HEAVY EQUIPMENT REPAIR & CLEANING", "streetAddress": "11236 Allen Acers Rd", "cityStateZip": "MacClenny FL 32063", "registration": "Florida Registration # MV74817", "phone": "C-904-881-0448", "fax": "904653-0448", "companyEmail": "FBTEQUIPMENTLLC@GMAIL.COM", "website": "", "warning": "No Machine will be released without Payment !!!", "shippingCompany": "FBT EQUIPMENT LLC", "shippingContact": "${safe(lh.shippingContact)}", "shippingStreet": "${safe(lh.shippingStreet)}", "shippingCityStateZip": "${safe(lh.shippingCityStateZip)}", "headerColor": "#001cff", "logoUrl": ""};
 function getSettings() {
   setupSheets();
   const values = getSpreadsheet_().getSheetByName(SHEET_SETTINGS).getDataRange().getValues();
@@ -533,7 +534,7 @@ function getSettings() {
     if (key.toLowerCase() === 'invoice email') result.invoiceEmail = val;
     if (key.indexOf('Letterhead:') === 0) result.letterhead[key.substring(11)] = val;
   }
-  if (result.letterhead.logoFileId) {
+  if (!result.letterhead.logoUrl && result.letterhead.logoFileId) {
     try {
       const blob = DriveApp.getFileById(result.letterhead.logoFileId).getBlob();
       result.letterhead.logoDataUrl = 'data:' + blob.getContentType() + ';base64,' + Utilities.base64Encode(blob.getBytes());
@@ -555,6 +556,7 @@ function saveSettings(payload) {
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('Please enter a valid email address.');
   upsertSetting_(sheet, 'Invoice Email', email);
   const letterhead = payload.letterhead || {};
+  if (letterhead.logoUrl && !/^https:\/\//i.test(String(letterhead.logoUrl))) throw new Error('Logo URL must start with https://');
   Object.keys(DEFAULT_LETTERHEAD_).forEach(function(k) {
     if (Object.prototype.hasOwnProperty.call(letterhead,k)) upsertSetting_(sheet,'Letterhead:'+k,String(letterhead[k] || '').substring(0,1500));
   });
@@ -696,4 +698,22 @@ function authorizeApp() {
   getPdfFolder_().getName();
   MailApp.getRemainingDailyQuota();
   return 'Authorization complete.';
+}
+
+function getLetterheadLogoForPdf_(lh) {
+  const url = String(lh.logoUrl || '').trim();
+  if (url) {
+    if (!/^https:\/\//i.test(url)) return '';
+    try {
+      const response = UrlFetchApp.fetch(url, {muteHttpExceptions:true, followRedirects:true});
+      if (response.getResponseCode() !== 200) return '';
+      const blob = response.getBlob();
+      const mime = String(blob.getContentType() || '').split(';')[0].toLowerCase();
+      if (['image/png','image/jpeg','image/gif','image/webp'].indexOf(mime) < 0) return '';
+      const bytes = blob.getBytes();
+      if (bytes.length > 2 * 1024 * 1024) return '';
+      return 'data:' + mime + ';base64,' + Utilities.base64Encode(bytes);
+    } catch(e) { return ''; }
+  }
+  return lh.logoDataUrl || '';
 }

@@ -115,7 +115,7 @@ function fillSettingsForm() {
   const lh = (appSettings && appSettings.letterhead) || {};
   LETTERHEAD_KEYS.forEach(k => { const el=document.getElementById('lh_'+k); if(el) el.value=lh[k] || (k==='headerColor'?'#001cff':''); });
   const preview=document.getElementById('letterheadLogoPreview');
-  if(preview) preview.innerHTML=lh.logoDataUrl ? '<img alt="Current logo" style="max-width:160px;max-height:110px" src="'+lh.logoDataUrl+'">' : 'No logo uploaded';
+  if(preview) previewGitHubLogo();
 }
 
 async function loadSettings() {
@@ -980,29 +980,20 @@ function goBack() {
 showLoginIfNeeded();
 if (isLoggedIn()) loadAppData();
 
-const LETTERHEAD_KEYS = ["companyName", "tagline", "streetAddress", "cityStateZip", "registration", "phone", "fax", "companyEmail", "website", "warning", "shippingCompany", "shippingContact", "shippingStreet", "shippingCityStateZip", "headerColor"];
-function previewLetterheadLogo() {
- const file=document.getElementById('letterheadLogoFile')?.files[0];
- if(!file) return;
- const img=document.createElement('img'); img.style.cssText='max-width:160px;max-height:110px'; img.src=URL.createObjectURL(file);
- const area=document.getElementById('letterheadLogoPreview'); area.replaceChildren(img);
-}
-async function uploadLetterheadLogo() {
- const file=document.getElementById('letterheadLogoFile')?.files[0];
- if(!file) { alert('Choose a logo first.'); return; }
- if(file.size>2*1024*1024) { alert('Choose a logo smaller than 2 MB.'); return; }
- if(!['image/png','image/jpeg','image/webp'].includes(file.type)) { alert('Use PNG, JPG or WEBP.'); return; }
- try {
-  showLoading('Uploading logo...');
-  const base64=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=reject;reader.readAsDataURL(file);});
-  appSettings=await apiRequest('saveLetterheadLogo',{base64,mimeType:file.type});
-  fillSettingsForm(); alert('Logo saved.');
- } catch(e) { alert('Logo upload failed: '+e.message); } finally {hideLoading();}
-}
-async function removeLetterheadLogo() {
- if(!confirm('Remove the current letterhead logo?')) return;
- try {showLoading('Removing logo...');appSettings=await apiRequest('saveLetterheadLogo',{remove:true});fillSettingsForm();}
- catch(e){alert('Could not remove logo: '+e.message);} finally {hideLoading();}
+const LETTERHEAD_KEYS = ["companyName", "tagline", "streetAddress", "cityStateZip", "registration", "phone", "fax", "companyEmail", "website", "warning", "shippingCompany", "shippingContact", "shippingStreet", "shippingCityStateZip", "headerColor", "logoUrl"];
+function previewGitHubLogo() {
+ const area=document.getElementById('letterheadLogoPreview');
+ const url=document.getElementById('lh_logoUrl')?.value.trim() || '';
+ if(!area) return;
+ area.replaceChildren();
+ if(!url) { area.textContent='No logo URL set'; return; }
+ if(!/^https:\/\//i.test(url)) { area.textContent='Enter a full HTTPS image URL.'; return; }
+ const img=document.createElement('img');
+ img.alt='Company logo preview';
+ img.style.cssText='max-width:160px;max-height:110px;object-fit:contain';
+ img.src=url;
+ img.onerror=()=>{area.textContent='Logo could not be loaded. Check the public URL.';};
+ area.appendChild(img);
 }
 function previewLetterhead() {
  const area=document.getElementById('letterheadPreview');if(!area)return;

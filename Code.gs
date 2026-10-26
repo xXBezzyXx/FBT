@@ -31,6 +31,8 @@ function doPost(e) {
       data = updateInvoicePaid(payload.invoiceNumber, payload.paid);
     } else if (action === 'generateInvoicePdf') {
       data = generateInvoicePdf(payload.invoiceNumber);
+    } else if (action === 'saveLetterheadLogo') {
+      data = saveLetterheadLogo_(payload);
     } else if (action === 'getSettings') {
       data = getSettings();
     } else if (action === 'saveSettings') {
@@ -345,6 +347,9 @@ function generateInvoicePdf(invoiceNumber) {
 }
 
 function buildFbtInvoiceHtml_(invoice) {
+  const lh = getSettings().letterhead;
+  const safe = function(v) { return escapeHtml_(String(v || "")); };
+  const logoMarkup = lh.logoDataUrl ? `<img src="${lh.logoDataUrl}" style="max-width:95px;max-height:75px;object-fit:contain"/>` : "▰";
   const labor = Number(invoice.hours || 0) * Number(invoice.rate || 0);
   const materials = Number(invoice.materials || 0);
   const grandTotal = Number(invoice.total || (labor + materials));
@@ -410,7 +415,7 @@ Routing # 067014822`;
   .invoice { width: 100%; }
   .logo-box { border: 8px solid #000; padding: 8px; margin-bottom: 8px; }
   .logo-inner { border: 3px solid #000; padding: 8px; display: flex; align-items: center; }
-  .logo-icon { width: 82px; height: 70px; background: #001cff; border: 3px solid #ddd; color: white; display: flex; align-items: center; justify-content: center; font-size: 34px; margin-right: 24px; }
+  .logo-icon { width: 82px; height: 70px; background: ${safe(lh.headerColor || "#001cff")}; border: 3px solid #ddd; color: white; display: flex; align-items: center; justify-content: center; font-size: 34px; margin-right: 24px; }
   .logo-text { flex: 1; text-align: center; }
   .company-name { font-family: Georgia, serif; font-size: 42px; letter-spacing: 8px; font-weight: bold; }
   .tagline { font-size: 19px; letter-spacing: 3px; font-weight: bold; margin-top: 4px; }
@@ -442,10 +447,10 @@ Routing # 067014822`;
 <div class="invoice">
   <div class="logo-box">
     <div class="logo-inner">
-      <div class="logo-icon">▰</div>
+      <div class="logo-icon">${logoMarkup}</div>
       <div class="logo-text">
-        <div class="company-name">FBT EQUIPMENT</div>
-        <div class="tagline">HEAVY EQUIPMENT REPAIR &amp; CLEANING</div>
+        <div class="company-name">${safe(lh.companyName)}</div>
+        <div class="tagline">${safe(lh.tagline)}</div>
       </div>
     </div>
   </div>
@@ -456,9 +461,9 @@ Routing # 067014822`;
   </div>
 
   <div class="company-info">
-    <div>11236 Allen Acers Rd MacClenny FL<br>32063</div><br>
-    <div>Florida Registration # MV74817<br>C-904-881-0448 FAX 904653-0448<br>FBTEQUIPMENTLLC@GMAIL.COM</div>
-    <div class="warning">No Machine will be released<br>without Payment !!!</div>
+    <div>${safe(lh.streetAddress)}<br>${safe(lh.cityStateZip)}</div><br>
+    <div>${safe(lh.registration)}<br>${safe(lh.phone)} ${lh.fax ? "FAX " + safe(lh.fax) : ""}<br>${safe(lh.companyEmail)} ${lh.website ? "<br>" + safe(lh.website) : ""}</div>
+    <div class="warning">${safe(lh.warning)}</div>
   </div>
 
   <div class="bar">
@@ -474,10 +479,10 @@ Routing # 067014822`;
       <div class="label">City/State/Zip</div><div class="value">${escapeHtml_(billingCityStateZip)}</div>
     </div>
     <div class="addr-grid">
-      <div></div><div class="value">FBT EQUIPMENT LLC</div>
-      <div class="label">Name:</div><div class="value">Margaret (904)-881-0448</div>
-      <div></div><div class="value">8747 West Beaver Street</div>
-      <div class="label">City/State/Zip</div><div class="value">Jacksonville, FL 32220</div>
+      <div></div><div class="value">${safe(lh.shippingCompany)}</div>
+      <div class="label">Name:</div><div class="value">${safe(lh.shippingContact)}</div>
+      <div></div><div class="value">${safe(lh.shippingStreet)}</div>
+      <div class="label">City/State/Zip</div><div class="value">${safe(lh.shippingCityStateZip)}</div>
     </div>
   </div>
 
@@ -516,39 +521,60 @@ Routing # 067014822`;
 </html>`;
 }
 
+function letterheadDefaults_() { return DEFAULT_LETTERHEAD_; }
+const DEFAULT_LETTERHEAD_ = {"companyName": "FBT EQUIPMENT", "tagline": "HEAVY EQUIPMENT REPAIR & CLEANING", "streetAddress": "11236 Allen Acers Rd", "cityStateZip": "MacClenny FL 32063", "registration": "Florida Registration # MV74817", "phone": "C-904-881-0448", "fax": "904653-0448", "companyEmail": "FBTEQUIPMENTLLC@GMAIL.COM", "website": "", "warning": "No Machine will be released without Payment !!!", "shippingCompany": "FBT EQUIPMENT LLC", "shippingContact": "${safe(lh.shippingContact)}", "shippingStreet": "${safe(lh.shippingStreet)}", "shippingCityStateZip": "${safe(lh.shippingCityStateZip)}", "headerColor": "#001cff"};
 function getSettings() {
   setupSheets();
-  const sheet = getSpreadsheet_().getSheetByName(SHEET_SETTINGS);
-  const values = sheet.getDataRange().getValues();
-  const settings = { invoiceEmail: '' };
-
+  const values = getSpreadsheet_().getSheetByName(SHEET_SETTINGS).getDataRange().getValues();
+  const result = { invoiceEmail: '', letterhead: Object.assign({}, letterheadDefaults_()) };
   for (let i = 1; i < values.length; i++) {
-    const key = String(values[i][0] || '').trim().toLowerCase();
-    const val = String(values[i][1] || '').trim();
-    if (key === 'invoice email') settings.invoiceEmail = val;
+    const key = String(values[i][0] || '').trim();
+    const val = String(values[i][1] || '');
+    if (key.toLowerCase() === 'invoice email') result.invoiceEmail = val;
+    if (key.indexOf('Letterhead:') === 0) result.letterhead[key.substring(11)] = val;
   }
-  return settings;
+  if (result.letterhead.logoFileId) {
+    try {
+      const blob = DriveApp.getFileById(result.letterhead.logoFileId).getBlob();
+      result.letterhead.logoDataUrl = 'data:' + blob.getContentType() + ';base64,' + Utilities.base64Encode(blob.getBytes());
+    } catch(e) { result.letterhead.logoDataUrl = ''; }
+  }
+  return result;
 }
-
+function upsertSetting_(sheet, key, value) {
+  const values = sheet.getDataRange().getValues();
+  for (let i=1; i<values.length; i++) {
+    if (String(values[i][0]) === key) { sheet.getRange(i+1,2).setValue(value); return; }
+  }
+  sheet.appendRow([key, value]);
+}
 function saveSettings(payload) {
   setupSheets();
   const sheet = getSpreadsheet_().getSheetByName(SHEET_SETTINGS);
-  const invoiceEmail = String(payload.invoiceEmail || '').trim();
-
-  if (invoiceEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(invoiceEmail)) {
-    throw new Error('Please enter a valid email address.');
+  const email = String(payload.invoiceEmail || '').trim();
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('Please enter a valid email address.');
+  upsertSetting_(sheet, 'Invoice Email', email);
+  const letterhead = payload.letterhead || {};
+  Object.keys(DEFAULT_LETTERHEAD_).forEach(function(k) {
+    if (Object.prototype.hasOwnProperty.call(letterhead,k)) upsertSetting_(sheet,'Letterhead:'+k,String(letterhead[k] || '').substring(0,1500));
+  });
+  return getSettings();
+}
+function saveLetterheadLogo_(payload) {
+  setupSheets();
+  const sheet = getSpreadsheet_().getSheetByName(SHEET_SETTINGS);
+  if (payload.remove) {
+    upsertSetting_(sheet,'Letterhead:logoFileId','');
+    return getSettings();
   }
-
-  const values = sheet.getDataRange().getValues();
-  let row = -1;
-  for (let i = 1; i < values.length; i++) {
-    if (String(values[i][0] || '').trim().toLowerCase() === 'invoice email') row = i + 1;
-  }
-  if (row === -1) {
-    row = sheet.getLastRow() + 1;
-    sheet.getRange(row, 1).setValue('Invoice Email');
-  }
-  sheet.getRange(row, 2).setValue(invoiceEmail);
+  const mime = String(payload.mimeType || '');
+  if (['image/png','image/jpeg','image/webp'].indexOf(mime) < 0) throw new Error('Logo must be PNG, JPG or WEBP.');
+  const base64 = String(payload.base64 || '');
+  if (base64.length > 2800000) throw new Error('Logo too large. Please use an image smaller than 2 MB.');
+  const bytes = Utilities.base64Decode(base64);
+  const blob = Utilities.newBlob(bytes,mime,'invoice-letterhead-logo.'+(mime === 'image/png'?'png':mime === 'image/webp'?'webp':'jpg'));
+  const file = DriveApp.createFile(blob);
+  upsertSetting_(sheet,'Letterhead:logoFileId',file.getId());
   return getSettings();
 }
 

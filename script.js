@@ -112,6 +112,10 @@ function hideLoading() {
 function fillSettingsForm() {
   const emailInput = document.getElementById('settingInvoiceEmail');
   if (emailInput) emailInput.value = (appSettings && appSettings.invoiceEmail) || '';
+  const lh = (appSettings && appSettings.letterhead) || {};
+  LETTERHEAD_KEYS.forEach(k => { const el=document.getElementById('lh_'+k); if(el) el.value=lh[k] || (k==='headerColor'?'#001cff':''); });
+  const preview=document.getElementById('letterheadLogoPreview');
+  if(preview) preview.innerHTML=lh.logoDataUrl ? '<img alt="Current logo" style="max-width:160px;max-height:110px" src="'+lh.logoDataUrl+'">' : 'No logo uploaded';
 }
 
 async function loadSettings() {
@@ -132,7 +136,8 @@ async function saveSettings() {
 
   try {
     showLoading('Saving settings...');
-    appSettings = await apiRequest('saveSettings', { invoiceEmail });
+    const letterhead={}; LETTERHEAD_KEYS.forEach(k => { const el=document.getElementById('lh_'+k); if(el) letterhead[k]=el.value; });
+    appSettings = await apiRequest('saveSettings', { invoiceEmail, letterhead });
     fillSettingsForm();
     alert('Settings saved.');
   } catch (err) {
@@ -974,3 +979,36 @@ function goBack() {
 ----------------------------- */
 showLoginIfNeeded();
 if (isLoggedIn()) loadAppData();
+
+const LETTERHEAD_KEYS = ["companyName", "tagline", "streetAddress", "cityStateZip", "registration", "phone", "fax", "companyEmail", "website", "warning", "shippingCompany", "shippingContact", "shippingStreet", "shippingCityStateZip", "headerColor"];
+function previewLetterheadLogo() {
+ const file=document.getElementById('letterheadLogoFile')?.files[0];
+ if(!file) return;
+ const img=document.createElement('img'); img.style.cssText='max-width:160px;max-height:110px'; img.src=URL.createObjectURL(file);
+ const area=document.getElementById('letterheadLogoPreview'); area.replaceChildren(img);
+}
+async function uploadLetterheadLogo() {
+ const file=document.getElementById('letterheadLogoFile')?.files[0];
+ if(!file) { alert('Choose a logo first.'); return; }
+ if(file.size>2*1024*1024) { alert('Choose a logo smaller than 2 MB.'); return; }
+ if(!['image/png','image/jpeg','image/webp'].includes(file.type)) { alert('Use PNG, JPG or WEBP.'); return; }
+ try {
+  showLoading('Uploading logo...');
+  const base64=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=reject;reader.readAsDataURL(file);});
+  appSettings=await apiRequest('saveLetterheadLogo',{base64,mimeType:file.type});
+  fillSettingsForm(); alert('Logo saved.');
+ } catch(e) { alert('Logo upload failed: '+e.message); } finally {hideLoading();}
+}
+async function removeLetterheadLogo() {
+ if(!confirm('Remove the current letterhead logo?')) return;
+ try {showLoading('Removing logo...');appSettings=await apiRequest('saveLetterheadLogo',{remove:true});fillSettingsForm();}
+ catch(e){alert('Could not remove logo: '+e.message);} finally {hideLoading();}
+}
+function previewLetterhead() {
+ const area=document.getElementById('letterheadPreview');if(!area)return;
+ const get=k=>document.getElementById('lh_'+k)?.value||'';
+ const safe=v=>String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+ const img=document.querySelector('#letterheadLogoPreview img');
+ area.style.display='block';
+ area.innerHTML='<div style="border:4px solid #111;padding:12px;display:flex;gap:15px;align-items:center">'+(img?'<img style="max-width:90px;max-height:70px" src="'+img.src+'">':'')+'<div><h2 style="margin:0">'+safe(get('companyName'))+'</h2><div>'+safe(get('tagline'))+'</div></div></div><p>'+safe(get('streetAddress'))+'<br>'+safe(get('cityStateZip'))+'<br>'+safe(get('registration'))+'<br>'+safe(get('phone'))+' '+safe(get('fax'))+'<br>'+safe(get('companyEmail'))+'</p><strong>'+safe(get('warning'))+'</strong>';
+}

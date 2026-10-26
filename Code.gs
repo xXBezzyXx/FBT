@@ -35,6 +35,8 @@ function doPost(e) {
       data = saveLetterheadLogo_(payload);
     } else if (action === 'getSettings') {
       data = getSettings();
+    } else if (action === 'syncInvoiceLogo') {
+      data = syncInvoiceLogo_(payload);
     } else if (action === 'saveSettings') {
       data = saveSettings(payload);
     } else if (action === 'sendInvoiceEmail') {
@@ -716,4 +718,12 @@ function getLetterheadLogoForPdf_(lh) {
     } catch(e) { return ''; }
   }
   return lh.logoDataUrl || '';
+}
+
+function syncInvoiceLogo_(payload) {
+ const url=String(payload.logoUrl||'').trim();
+ if(!/^https:\/\/[a-z0-9.-]+\/.*\/images\/logo\.png(?:\?.*)?$/i.test(url)) throw new Error('Invalid logo URL');
+ setupSheets(); const sheet=getSpreadsheet_().getSheetByName(SHEET_SETTINGS);
+ if ((getSettings().letterhead.logoUrl||'')!==url) upsertSetting_(sheet,'Letterhead:logoUrl',url);
+ return {logoUrl:url};
 }

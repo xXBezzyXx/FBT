@@ -138,6 +138,7 @@ async function saveSettings() {
     showLoading('Saving settings...');
     const letterhead={}; LETTERHEAD_KEYS.forEach(k => { const el=document.getElementById('lh_'+k); if(el) letterhead[k]=el.value; });
     appSettings = await apiRequest('saveSettings', { invoiceEmail, letterhead });
+    await syncInvoiceLogo();
     fillSettingsForm();
     alert('Settings saved.');
   } catch (err) {
@@ -154,6 +155,7 @@ async function loadAppData() {
   try {
     showLoading('Loading invoices...');
     const data = await apiRequest('getAppData');
+    await syncInvoiceLogo();
 
     customers = data.customers || [];
     invoices = data.invoices || [];
@@ -980,20 +982,17 @@ function goBack() {
 showLoginIfNeeded();
 if (isLoggedIn()) loadAppData();
 
-const LETTERHEAD_KEYS = ["companyName", "tagline", "streetAddress", "cityStateZip", "registration", "phone", "fax", "companyEmail", "website", "warning", "shippingCompany", "shippingContact", "shippingStreet", "shippingCityStateZip", "headerColor", "logoUrl"];
+const LETTERHEAD_KEYS = ["companyName", "tagline", "streetAddress", "cityStateZip", "registration", "phone", "fax", "companyEmail", "website", "warning", "shippingCompany", "shippingContact", "shippingStreet", "shippingCityStateZip", "headerColor"];
+function invoiceLogoUrl() { return new URL('images/logo.png', document.baseURI).href; }
 function previewGitHubLogo() {
- const area=document.getElementById('letterheadLogoPreview');
- const url=document.getElementById('lh_logoUrl')?.value.trim() || '';
- if(!area) return;
- area.replaceChildren();
- if(!url) { area.textContent='No logo URL set'; return; }
- if(!/^https:\/\//i.test(url)) { area.textContent='Enter a full HTTPS image URL.'; return; }
- const img=document.createElement('img');
- img.alt='Company logo preview';
- img.style.cssText='max-width:160px;max-height:110px;object-fit:contain';
- img.src=url;
- img.onerror=()=>{area.textContent='Logo could not be loaded. Check the public URL.';};
- area.appendChild(img);
+ const area=document.getElementById('letterheadLogoPreview'); if(!area)return;
+ area.replaceChildren(); const img=document.createElement('img');img.alt='Company logo';
+ img.style.cssText='max-width:160px;max-height:110px;object-fit:contain';img.src=invoiceLogoUrl();
+ img.onerror=()=>{area.textContent='No images/logo.png found. Upload it to GitHub and refresh.';};area.appendChild(img);
+}
+async function syncInvoiceLogo() {
+ try {await apiRequest('syncInvoiceLogo',{logoUrl:invoiceLogoUrl()});}
+ catch(e){console.warn('Logo sync failed:',e);}
 }
 function previewLetterhead() {
  const area=document.getElementById('letterheadPreview');if(!area)return;

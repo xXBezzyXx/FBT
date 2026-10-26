@@ -1,0 +1,1 @@
+Upload images/logo.png to your public GitHub Pages repository. Replace index.html and script.js on GitHub; replace Code.gs in Apps Script and deploy a NEW version. Open the app once to synchronize the shared logo path automatically. No URLs to paste. Existing config.js and style.css stay unchanged. Newly generated PDFs use the logo. PNG under 2MB recommended.
